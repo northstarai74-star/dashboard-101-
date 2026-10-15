@@ -205,6 +205,35 @@ model RateLimit {
   @@index([resetAt])
 }
 
+// Daily channel metrics that have no native data in this app (WhatsApp, YouTube, LinkedIn, email, website, ...).
+// Filled by hand on the Analytics page or pushed by automations to POST /api/metrics/ingest.
+// One row per channel + metric + day + source; re-sending the same day overwrites the value.
+model MetricEntry {
+  id        String   @id @default(cuid())
+  channel   String   // see src/lib/analytics.ts CHANNELS
+  metric    String   // see src/lib/analytics.ts CHANNELS
+  date      DateTime // UTC midnight of the day the value belongs to
+  value     Float
+  source    String   @default("manual") // manual | api:<name>
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([channel, metric, date, source])
+  @@index([channel, metric, date])
+}
+
+// Business costs. Revenue comes from Deal; profit = revenue - expenses.
+model Expense {
+  id        String   @id @default(cuid())
+  label     String
+  category  String   @default("OTHER") // TOOLS | ADS | PAYROLL | OPERATIONS | OTHER
+  amount    Float
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
 // Higgsfield image generations. STATUS: queued | in_progress | completed | failed | nsfw
 model Creative {
   id        String   @id @default(cuid())

@@ -28,9 +28,30 @@ Login: just `ADMIN_PASSWORD` from `.env` (defaults in `.env.example`) — the em
 | Comments & Enquiries | Triage IG comments and lead-ad forms; reply, convert to lead |
 | Contacts | CRM: name, contact info, services, assigned team, lifetime value, edit |
 | Team | Members (add, edit, reset password, remove), workload, auto-assignment rules per service (AI agent or person) |
+| Analytics | Every channel in one place (Instagram, WhatsApp, YouTube, LinkedIn, creation tools, email, website & forms) plus revenue, expenses and profit. Log daily numbers by hand, and ask **The Council** for advice |
 | Creative Studio | Generate post / reel / ad images with Higgsfield |
 | Integrations | Meta connection + webhook details, **multi-key vault** for Meta / Claude / Higgsfield |
 | Settings | Demo mode, auto-assign, AI agent auto-replies, Claude model, change your password |
+
+## Analytics, The Council and the assistant
+
+**Analytics** (`/analytics`) combines two kinds of numbers:
+
+- **Live**: counted from data the app already records: Instagram DMs received and sent, comments, inquiries from comments, Meta lead forms, creatives generated, and revenue from paid deals.
+- **Manual**: WhatsApp, YouTube, LinkedIn, email, website visits and other creation tools. Log them on the page, or push them from an automation (n8n, Make, Zapier, a cron job reading an export):
+
+```bash
+curl -X POST https://your-app/api/metrics/ingest \
+  -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+  -d '[{"channel":"WHATSAPP","metric":"messages_received","value":42,"date":"2026-10-14"},
+       {"channel":"YOUTUBE","metric":"views","value":900}]'
+```
+
+Sending the same channel, metric, date and source again replaces the value. `date` defaults to today (UTC). Known channels and metrics are listed in `CHANNELS` in `src/lib/analytics.ts`.
+Expenses are logged on the same page; profit = paid deals − expenses.
+
+**The Council** gives advice from five advisors (Strategist, Growth Marketer, CFO, Operator, Devil's Advocate) over the last 30 days of numbers, plus a verdict and 3–5 actions. Use it from the Analytics page, or type `ask the council <question>` in the assistant chat (bottom-right button on every page).
+With a Claude key and demo mode off it runs one live Claude call; otherwise it gives rule-based advice from the same numbers.
 
 ## AI agent
 

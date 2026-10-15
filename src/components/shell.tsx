@@ -19,6 +19,7 @@ import {
   Menu,
   Sparkles,
   Wand2,
+  ChartColumn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./ui";
@@ -29,6 +30,7 @@ type U = { name: string; email: string; role: string; avatarColor: string };
 const NAV = [
   { group: "Workspace", items: [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/analytics", label: "Analytics", icon: ChartColumn },
     { href: "/leads", label: "Leads", icon: Users },
     { href: "/inbox", label: "Inbox", icon: InboxIcon, badge: "inbox" as const },
     { href: "/engagement", label: "Comments & Enquiries", icon: MessageSquareText, badge: "comments" as const },

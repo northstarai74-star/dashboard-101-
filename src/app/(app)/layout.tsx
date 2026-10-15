@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
 import { Shell } from "@/components/shell";
+import { AssistantWidget } from "@/components/assistant-widget";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <Shell user={user} counts={{ inbox: inbox._sum.unread ?? 0, comments }} demoMode={settings.demoMode}>
       {children}
+      <AssistantWidget />
     </Shell>
   );
 }
