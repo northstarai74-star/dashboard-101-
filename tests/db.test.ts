@@ -31,12 +31,12 @@ test("AI agent replies to leads assigned to it and hands off on request (demo mo
   const { runAiAgent } = await import("../src/lib/agent");
 
   const before = await getSettings();
-  const prevRule = await db.assignmentRule.findUnique({ where: { service: "DROPSHIPPING" } });
+  const prevRule = await db.assignmentRule.findUnique({ where: { service: "AI_VOICE" } });
   const owner = await db.user.create({ data: { name: "Agent Test Owner", email: `owner-${randomUUID()}@test.local`, passwordHash: "x" } });
   await saveSettings({ demoMode: true, autoAssign: true, aiAgent: true });
   await db.assignmentRule.upsert({
-    where: { service: "DROPSHIPPING" },
-    create: { service: "DROPSHIPPING", agent: "AI", userId: owner.id },
+    where: { service: "AI_VOICE" },
+    create: { service: "AI_VOICE", agent: "AI", userId: owner.id },
     update: { agent: "AI", userId: owner.id },
   });
   const igUserId = `test_${randomUUID()}`;
@@ -45,11 +45,11 @@ test("AI agent replies to leads assigned to it and hands off on request (demo mo
     await db.contact.deleteMany({ where: { igUserId } });
     await db.user.delete({ where: { id: owner.id } }).catch(() => {});
     if (prevRule) await db.assignmentRule.update({ where: { id: prevRule.id }, data: { agent: prevRule.agent, userId: prevRule.userId } });
-    else await db.assignmentRule.deleteMany({ where: { service: "DROPSHIPPING" } });
+    else await db.assignmentRule.deleteMany({ where: { service: "AI_VOICE" } });
     await saveSettings(before);
   });
 
-  const r = await ingestMessage({ igUserId, name: "Test Prospect", text: "Do you do dropshipping product sourcing? bulk order", externalId: `m_${randomUUID()}` });
+  const r = await ingestMessage({ igUserId, name: "Test Prospect", text: "Can your AI receptionist answer missed calls? price?",externalId: `m_${randomUUID()}` });
   assert.ok(r);
   const lead = await db.lead.findFirstOrThrow({ where: { contactId: r.contactId } });
   assert.equal(lead.assignedAgent, "AI");

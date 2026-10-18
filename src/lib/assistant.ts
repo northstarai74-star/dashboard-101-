@@ -24,7 +24,7 @@ export function parseCouncilTrigger(text: string): string | null {
 
 export type AssistantReply = { role: "assistant"; content: string; council?: CouncilResult };
 
-const CHAT_SYSTEM = `You are the business assistant inside Vanita Business OS, the owner's dashboard for an agency with three services: AI voice receptionists, web development and dropshipping.
+const CHAT_SYSTEM = `You are the business assistant inside North Star AI OS, the owner's dashboard for an agency with two services: AI voice receptionists and web development.
 You can see the owner's latest numbers (below). Answer briefly and concretely, quote the numbers you use, and say when a number is missing rather than guessing.
 If the owner wants a decision weighed from several angles, suggest they type "ask the council" followed by their question.`;
 
@@ -32,7 +32,8 @@ If the owner wants a decision weighed from several angles, suggest they type "as
 export function formatCouncil(c: CouncilResult) {
   const advisors = c.advisors.map((a) => `${a.name}: ${a.advice}`).join("\n\n");
   const actions = c.actions.map((a, i) => `${i + 1}. ${a}`).join("\n");
-  return `${advisors}\n\nVerdict: ${c.verdict}\n\nNext 7 days:\n${actions}`;
+  const note = c.mode === "live" ? "\n\nSimulated advisors built from public work. They are not endorsed by the people named." : "";
+  return `${advisors}\n\nVerdict: ${c.verdict}\n\nNext 7 days:\n${actions}${note}`;
 }
 
 export async function assistantReply(messages: z.infer<typeof AssistantInput>["messages"]): Promise<AssistantReply> {
@@ -53,7 +54,7 @@ export async function assistantReply(messages: z.infer<typeof AssistantInput>["m
       content:
         "I can answer questions with live AI once a Claude key is added in Integrations and demo mode is off. Until then here is your current snapshot:\n\n" +
         summarizeForAi(snapshot) +
-        '\n\nType "ask the council" followed by your question for advice from the five advisors.',
+        '\n\nType "ask the council" followed by your question for advice from the seven advisors.',
     };
   }
 

@@ -10,10 +10,10 @@ const SAMPLES = {
   dm: [
     "Hi! We're a dental clinic missing lots of calls. Can your AI receptionist handle bookings? What's the price?",
     "Looking for a developer to build a new website for my bakery, budget ~$2,500.",
-    "Do you offer dropshipping product sourcing? I want bulk pricing for yoga mats.",
+    "Do you offer a website redesign for my store? I want a quote.",
   ],
   comment: ["How much for an AI receptionist? 🙋", "Can you build a site like this for my salon?", "Where do you source those products?"],
-  leadad: ["Need a landing page + Shopify store", "Interested in an AI voice agent demo for my law firm", "Want to start dropshipping, need supplier help"],
+  leadad: ["Need a landing page + Shopify store", "Interested in an AI voice agent demo for my law firm", "Want a booking system for my clinic website"],
 };
 
 /** Demo-mode helper: pushes a fake Meta event through the exact same ingestion pipeline the webhook uses. */

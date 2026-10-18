@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, DollarSign, Package, Mic, Globe, Users, BadgeCheck, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, BadgeCheck, DollarSign, Inbox, Link2, Mic, TrendingUp, UserPlus, Users, Globe } from "lucide-react";
+import { db } from "@/lib/db";
 import { dashboardStats } from "@/lib/stats";
+import { listChannels } from "@/lib/connections";
 import { PageHeader } from "@/components/shell";
 import { Avatar, Card, CardHeader, Empty, ScoreBadge, ServiceBadge } from "@/components/ui";
-import { Funnel, LeadsAreaChart, RevenueBars, ServiceDonut } from "@/components/charts";
+import { Funnel, LeadsAreaChart } from "@/components/charts";
 import { SERVICE_META } from "@/lib/constants";
 import { cn, money, timeAgo } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 const RANGES = [
   { v: 7, label: "7 days" },
@@ -13,40 +17,50 @@ const RANGES = [
   { v: 90, label: "90 days" },
 ];
 
-function Kpi({ label, value, delta, icon: Icon, tone, hint }: { label: string; value: string; delta?: number; icon: typeof Users; tone: string; hint?: string }) {
+const SERVICE_ICON = { AI_VOICE: Mic, WEB_DEV: Globe } as const;
+
+/** Headline figure with its change against the previous period. */
+function Headline({ label, value, delta, icon: Icon, tone }: { label: string; value: string; delta?: number; icon: typeof Users; tone: string }) {
   return (
-    <Card className="animate-in p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+    <div className="rounded-2xl border bg-surface p-5">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-muted">{label}</span>
-        <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", tone)}>
-          <Icon size={17} />
+        <span className="text-sm text-muted">{label}</span>
+        <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", tone)}>
+          <Icon size={16} />
         </span>
       </div>
       <p className="mt-3 text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
-      <div className="mt-1.5 flex items-center gap-1.5 text-xs">
-        {delta !== undefined ? (
-          <span className={cn("inline-flex items-center gap-0.5 font-semibold", delta >= 0 ? "text-emerald-600" : "text-rose-600")}>
-            {delta >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-            {Math.abs(delta)}%
-          </span>
-        ) : null}
-        <span className="text-muted">{hint ?? "vs previous period"}</span>
-      </div>
-    </Card>
+      {delta !== undefined && (
+        <p className={cn("mt-1.5 inline-flex items-center gap-0.5 text-xs font-semibold", delta >= 0 ? "text-emerald-600" : "text-rose-600")}>
+          {delta >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+          {Math.abs(delta)}% <span className="font-normal text-muted">vs previous period</span>
+        </p>
+      )}
+    </div>
   );
 }
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const { range } = await searchParams;
   const rangeDays = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
-  const s = await dashboardStats(rangeDays);
+
+  const [s, unread, unassigned, channels] = await Promise.all([
+    dashboardStats(rangeDays),
+    db.conversation.aggregate({ _sum: { unread: true } }),
+    db.lead.count({ where: { assignedUserId: null, stage: { notIn: ["WON", "LOST"] } } }),
+    listChannels(),
+  ]);
   const k = s.kpis;
+  const totalLeads = s.byService.reduce((n, b) => n + b.leads, 0);
+  const unreadCount = unread._sum.unread ?? 0;
+  const connected = channels.filter((c) => c.status === "CONNECTED").length;
+  const failing = channels.filter((c) => c.status === "ERROR");
 
   return (
     <>
       <PageHeader
         title="Dashboard"
-        subtitle="Leads, conversions and revenue across all three business lines"
+        subtitle={`Overview for the last ${rangeDays} days across AI Voice and Web Dev`}
         actions={
           <div className="inline-flex rounded-xl border bg-surface p-1">
             {RANGES.map((r) => (
@@ -62,58 +76,99 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         }
       />
 
+      {/* Headline figures */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi label="Total leads" value={String(k.totalLeads.value)} delta={k.totalLeads.delta} icon={Users} tone="bg-indigo-500/10 text-indigo-600" />
-        <Kpi label="Dropshipping leads" value={String(k.dropshipping.value)} icon={Package} tone="bg-amber-500/10 text-amber-600" hint="in selected period" />
-        <Kpi label="Converted customers" value={String(k.customers.value)} delta={k.customers.delta} icon={BadgeCheck} tone="bg-emerald-500/10 text-emerald-600" />
-        <Kpi label="Revenue" value={money(k.revenue.value)} delta={k.revenue.delta} icon={DollarSign} tone="bg-sky-500/10 text-sky-600" />
-      </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <Kpi label="AI Voice leads" value={String(k.aiVoice.value)} icon={Mic} tone="bg-violet-500/10 text-violet-600" hint="in selected period" />
-        <Kpi label="Web Dev leads" value={String(k.webDev.value)} icon={Globe} tone="bg-blue-500/10 text-blue-600" hint="in selected period" />
-        <Kpi label="Lead → customer rate" value={`${k.conversion.value}%`} icon={TrendingUp} tone="bg-fuchsia-500/10 text-fuchsia-600" hint="leads marked won" />
+        <Headline label="Revenue" value={money(k.revenue.value)} delta={k.revenue.delta} icon={DollarSign} tone="bg-sky-500/10 text-sky-600" />
+        <Headline label="New leads" value={String(k.totalLeads.value)} delta={k.totalLeads.delta} icon={Users} tone="bg-indigo-500/10 text-indigo-600" />
+        <Headline label="Customers won" value={String(k.customers.value)} delta={k.customers.delta} icon={BadgeCheck} tone="bg-emerald-500/10 text-emerald-600" />
+        <Headline label="Lead → customer" value={`${k.conversion.value}%`} icon={TrendingUp} tone="bg-fuchsia-500/10 text-fuchsia-600" />
       </div>
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-3">
+
+      {/* Lead volume + needs attention */}
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader title="Lead volume" subtitle="New leads per service" />
           <div className="px-3 pb-4">
             <LeadsAreaChart data={s.series} />
           </div>
         </Card>
+
         <Card>
-          <CardHeader title="Leads by service" />
-          <div className="px-4 pb-5">
-            <ServiceDonut data={s.byService} />
-            <ul className="mt-2 space-y-2">
-              {s.byService.map((b) => (
-                <li key={b.service} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: SERVICE_META[b.service].color }} />
-                    {SERVICE_META[b.service].label}
-                  </span>
-                  <span className="font-medium tabular-nums">{b.leads}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <CardHeader title="Needs attention" subtitle="Work waiting on your team" />
+          <ul className="divide-y px-2 pb-2">
+            <li>
+              <Link href="/inbox" className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600"><Inbox size={16} /></span>
+                <span className="flex-1 text-sm">Unread messages</span>
+                <span className={cn("rounded-full px-2.5 py-0.5 text-sm font-semibold tabular-nums", unreadCount ? "bg-accent text-accent-fg" : "bg-surface-2 text-muted")}>{unreadCount}</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/leads" className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><UserPlus size={16} /></span>
+                <span className="flex-1 text-sm">Unassigned open leads</span>
+                <span className={cn("rounded-full px-2.5 py-0.5 text-sm font-semibold tabular-nums", unassigned ? "bg-amber-500 text-white" : "bg-surface-2 text-muted")}>{unassigned}</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/connections" className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Link2 size={16} /></span>
+                <span className="flex-1 text-sm">Channels connected</span>
+                <span className="text-sm font-semibold tabular-nums">{connected}<span className="font-normal text-muted"> / {channels.length}</span></span>
+              </Link>
+            </li>
+          </ul>
+          {failing.length > 0 && (
+            <p className="mx-5 mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+              Check failed for {failing.map((c) => c.name).join(", ")}. <Link href="/connections" className="font-medium underline">Fix on Connections</Link>
+            </p>
+          )}
         </Card>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <Card>
-          <CardHeader title="Revenue by service" />
-          <div className="px-3 pb-4">
-            <RevenueBars data={s.byService} />
-          </div>
-        </Card>
+      {/* Service breakdown */}
+      <div className="mt-4 grid gap-4 md:grid-cols-3">
+        {s.byService.map((b) => {
+          const meta = SERVICE_META[b.service];
+          const Icon = SERVICE_ICON[b.service as keyof typeof SERVICE_ICON] ?? Globe;
+          const share = totalLeads ? Math.round((b.leads / totalLeads) * 100) : 0;
+          return (
+            <Card key={b.service} className="p-5">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg", meta.bg, meta.text)}><Icon size={16} /></span>
+                  {meta.label}
+                </span>
+                <span className="text-xs text-muted">{share}% of leads</span>
+              </div>
+              <div className="mt-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-2xl font-semibold tabular-nums">{b.leads}</p>
+                  <p className="text-xs text-muted">leads</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-semibold tabular-nums">{money(b.revenue)}</p>
+                  <p className="text-xs text-muted">revenue</p>
+                </div>
+              </div>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div className="h-full rounded-full" style={{ width: `${share}%`, background: meta.color }} />
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Pipeline + activity */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader title="Pipeline" subtitle="Where leads are in the funnel" />
           <div className="px-5 pb-5">
             <Funnel data={s.funnel} />
           </div>
         </Card>
-        <Card className="lg:col-span-2 xl:col-span-1">
+        <Card>
           <CardHeader title="Recent activity" />
           <ul className="space-y-4 px-5 pb-5">
             {s.activity.length === 0 && <Empty title="No activity yet" />}
@@ -132,6 +187,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         </Card>
       </div>
 
+      {/* Latest leads */}
       <Card className="mt-4">
         <CardHeader title="Latest leads" action={<Link href="/leads" className="text-xs font-medium text-accent hover:underline">View all</Link>} />
         <div className="overflow-x-auto">

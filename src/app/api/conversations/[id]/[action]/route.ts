@@ -27,6 +27,9 @@ export const POST = route<Ctx>(async (req, { params }, user) => {
 
     case "send": {
       const { text } = z.object({ text: z.string().min(1).max(1000) }).parse(await req.json());
+      if (convo.platform !== "INSTAGRAM") {
+        return json({ error: `Replies to ${convo.platform.toLowerCase()} inquiries aren't sent from here yet` }, 400);
+      }
       if (!convo.contact.igUserId && !(await getSettings()).demoMode) {
         return json({ error: "This contact has no Instagram ID to message" }, 400);
       }

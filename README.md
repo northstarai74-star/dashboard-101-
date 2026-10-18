@@ -1,6 +1,6 @@
-# Vanita Business OS
+# North Star AI OS
 
-A personal CRM / operating system for three business lines: **AI Voice Receptionist**, **Web Development** and **Dropshipping**.
+A personal CRM / operating system for three business lines: **AI Voice Receptionist** and **Web Development**.
 It captures Instagram DMs, comments and Meta Lead Ads, classifies each lead with Claude, assigns it to an AI agent or team member, and tracks leads → converted customers → revenue.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind v4 · Prisma 6 + PostgreSQL · Recharts.
@@ -22,7 +22,7 @@ Login: just `ADMIN_PASSWORD` from `.env` (defaults in `.env.example`) — the em
 
 | Page | What it does |
 |---|---|
-| Dashboard | Total / Dropshipping / AI Voice / Web Dev leads, converted customers, revenue, conversion rate, charts, funnel, activity |
+| Dashboard | Total / AI Voice / Web Dev leads, converted customers, revenue, conversion rate, charts, funnel, activity |
 | Leads | Table + drag-and-drop kanban, filters, bulk assign to a service / AI agent / team member, lead drawer with timeline, convert-to-customer (records revenue) |
 | Inbox | Instagram DMs: threads, reply, "Suggest" (Claude draft), create lead from thread |
 | Comments & Enquiries | Triage IG comments and lead-ad forms; reply, convert to lead |

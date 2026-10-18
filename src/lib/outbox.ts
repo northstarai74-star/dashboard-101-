@@ -26,6 +26,7 @@ export async function recordOutgoing(conversationId: string, text: string, opts:
 export async function sendDirectMessage(conversationId: string, text: string, opts: { byAi?: boolean } = {}) {
   const convo = await db.conversation.findUnique({ where: { id: conversationId }, include: { contact: true } });
   if (!convo) throw new Error("Conversation not found");
+  if (convo.platform !== "INSTAGRAM") throw new Error(`Replies to ${convo.platform.toLowerCase()} inquiries aren't sent from here yet`);
   const settings = await getSettings();
   let externalId: string | undefined;
   if (!settings.demoMode) {

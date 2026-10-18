@@ -6,17 +6,16 @@ import { getSettings } from "../settings";
 import { db } from "../db";
 
 export const ClassificationSchema = z.object({
-  service: z.enum(["AI_VOICE", "WEB_DEV", "DROPSHIPPING", "UNASSIGNED"]),
+  service: z.enum(["AI_VOICE", "WEB_DEV", "UNASSIGNED"]),
   score: z.number().int().min(0).max(100),
   summary: z.string().max(300),
   suggestedAgent: z.enum(["AI", "HUMAN"]),
 });
 export type Classification = z.infer<typeof ClassificationSchema>;
 
-const KEYWORDS: Record<"AI_VOICE" | "WEB_DEV" | "DROPSHIPPING", RegExp> = {
+const KEYWORDS: Record<"AI_VOICE" | "WEB_DEV", RegExp> = {
   AI_VOICE: /(receptionist|voice|call|phone|answer(ing)? calls|missed calls|appointment|booking|ai agent|front desk)/i,
   WEB_DEV: /(website|web ?site|web app|landing page|shopify theme|redesign|seo|ecommerce site|portfolio|developer|build (me )?a (site|app))/i,
-  DROPSHIPPING: /(dropship|product|supplier|wholesale|store|sourcing|shipping|aliexpress|winning product|bulk order|price list|moq)/i,
 };
 
 /** Offline fallback used in demo mode or when no Claude key is available. */
@@ -36,16 +35,15 @@ export function heuristicClassify(text: string): Classification {
     service: best,
     score: best === "UNASSIGNED" ? Math.min(score, 30) : score,
     summary: text.length > 140 ? text.slice(0, 137) + "…" : text,
-    suggestedAgent: best === "AI_VOICE" || best === "DROPSHIPPING" ? "AI" : "HUMAN",
+    suggestedAgent: best === "AI_VOICE" ? "AI" : "HUMAN",
   };
 }
 
-const SYSTEM = `You qualify inbound leads for a small agency with three services:
+const SYSTEM = `You qualify inbound leads for a small agency with two services:
 - AI_VOICE: AI voice receptionist agents that answer business phone calls and book appointments
 - WEB_DEV: website / web app development
-- DROPSHIPPING: dropshipping products, supplier sourcing and store setup
 Given a message from a prospect, reply with ONLY a JSON object:
-{"service":"AI_VOICE|WEB_DEV|DROPSHIPPING|UNASSIGNED","score":0-100 purchase-intent score,"summary":"one sentence <=200 chars","suggestedAgent":"AI|HUMAN"}
+{"service":"AI_VOICE|WEB_DEV|UNASSIGNED","score":0-100 purchase-intent score,"summary":"one sentence <=200 chars","suggestedAgent":"AI|HUMAN"}
 Use HUMAN when the lead is high value, complex or emotional; AI for simple FAQ-style enquiries. Use UNASSIGNED when it fits none of the services.`;
 
 export async function classifyText(text: string): Promise<Classification> {
@@ -76,7 +74,6 @@ export async function classifyText(text: string): Promise<Classification> {
 const TEMPLATE_BODY: Record<Classification["service"], string> = {
   AI_VOICE: "Our AI voice receptionist answers every call, books appointments and never misses a lead. Want a quick 10-min demo this week?",
   WEB_DEV: "We build fast, conversion-focused websites. Could you share your business, goals and a rough budget so I can send a proposal?",
-  DROPSHIPPING: "We can help with product sourcing and store setup. What niche are you in, and what order volume are you planning?",
   UNASSIGNED: "Could you tell me a bit more about what you're looking for so I can point you to the right person?",
 };
 
@@ -111,7 +108,7 @@ export async function suggestReply(history: { direction: string; text: string }[
         model: settings.claudeModel,
         max_tokens: 1024,
         system:
-          "You write short, friendly Instagram DM replies for an agency offering AI voice receptionists, web development and dropshipping. Reply with only the message text (max 3 sentences), ending with a clear next step.",
+          "You write short, friendly Instagram DM replies for an agency offering AI voice receptionists and web development. Reply with only the message text (max 3 sentences), ending with a clear next step.",
         messages: [{ role: "user", content: toTranscript(history) }],
       });
       const block = res.content.find((b) => b.type === "text");
@@ -150,7 +147,6 @@ export function heuristicAgentDecision(lastText: string): AgentDecision {
 const AGENT_SYSTEM = `You are the first-line AI assistant replying to Instagram DMs for a small agency with three services:
 - AI voice receptionist agents that answer business phone calls and book appointments
 - Website / web app development
-- Dropshipping product sourcing and store setup
 Write the next reply to the prospect: friendly, max 3 short sentences, ending with a clear next step (a question, a demo, or asking for details).
 Never invent prices, discounts, deadlines or guarantees.
 Set handoff=true when a human should take over: the prospect asks for a person or a call, wants a quote or contract, is upset, the request is complex or high-value, or you are unsure. When handing off, the reply should tell them a teammate will follow up. Give a short reason for the decision.`;

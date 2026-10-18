@@ -25,14 +25,14 @@ const tooltipStyle = {
   boxShadow: "0 8px 24px rgb(0 0 0 / 0.12)",
 };
 
-type Point = { label: string; total: number; AI_VOICE: number; WEB_DEV: number; DROPSHIPPING: number };
+type Point = { label: string; total: number; AI_VOICE: number; WEB_DEV: number };
 
 export function LeadsAreaChart({ data }: { data: Point[] }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <AreaChart data={data} margin={{ left: -20, right: 8, top: 8 }}>
         <defs>
-          {(["AI_VOICE", "WEB_DEV", "DROPSHIPPING"] as const).map((s) => (
+          {(["AI_VOICE", "WEB_DEV"] as const).map((s) => (
             <linearGradient key={s} id={`g-${s}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={SERVICE_META[s].color} stopOpacity={0.35} />
               <stop offset="100%" stopColor={SERVICE_META[s].color} stopOpacity={0} />
@@ -43,7 +43,7 @@ export function LeadsAreaChart({ data }: { data: Point[] }) {
         <XAxis dataKey="label" tick={tick} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={24} />
         <YAxis tick={tick} tickLine={false} axisLine={false} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} />
-        {(["AI_VOICE", "WEB_DEV", "DROPSHIPPING"] as const).map((s) => (
+        {(["AI_VOICE", "WEB_DEV"] as const).map((s) => (
           <Area key={s} type="monotone" dataKey={s} name={SERVICE_META[s].short} stroke={SERVICE_META[s].color} strokeWidth={2} fill={`url(#g-${s})`} />
         ))}
       </AreaChart>

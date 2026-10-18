@@ -6,7 +6,15 @@ import { cn, initials } from "@/lib/utils";
 import { SERVICE_META, STAGE_META } from "@/lib/constants";
 
 export function Card({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-2xl border bg-surface shadow-card", className)} {...p} />;
+  return (
+    <div
+      className={cn(
+        "rounded-[20px] border-0 bg-surface shadow-card ring-1 ring-black/[0.04] transition-shadow duration-300 hover:shadow-[0_8px_30px_-12px_rgb(0_0_0/0.12)] dark:bg-gradient-to-b dark:from-white/[0.05] dark:to-transparent dark:ring-white/[0.07]",
+        className,
+      )}
+      {...p}
+    />
+  );
 }
 
 export function CardHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
@@ -33,12 +41,12 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
     <button
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-        size === "sm" ? "h-8 px-3 text-xs" : "h-9 px-4 text-sm",
-        variant === "primary" && "bg-accent text-accent-fg shadow-sm hover:brightness-110",
-        variant === "secondary" && "border bg-surface hover:bg-surface-2",
-        variant === "ghost" && "hover:bg-surface-2",
-        variant === "danger" && "bg-rose-600 text-white hover:bg-rose-500",
+        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-[background,transform,opacity] duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        size === "sm" ? "h-8 px-3.5 text-[13px]" : "h-10 px-5 text-sm",
+        variant === "primary" && "bg-[var(--cta)] text-[var(--cta-fg)] shadow-sm hover:opacity-90",
+        variant === "secondary" && "border border-border bg-fg/[0.06] text-fg hover:bg-fg/10",
+        variant === "ghost" && "text-accent hover:bg-accent/10",
+        variant === "danger" && "bg-[#ff3b30] text-white hover:brightness-110",
         className,
       )}
       {...p}
@@ -47,7 +55,7 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
 });
 
 const field =
-  "h-9 w-full rounded-lg border bg-surface px-3 text-sm outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/20";
+  "h-10 w-full rounded-xl border-0 bg-surface-2 px-3.5 text-sm outline-none transition placeholder:text-muted focus:ring-2 focus:ring-accent/40";
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...p }, ref) {
     return <input ref={ref} className={cn(field, className)} {...p} />;

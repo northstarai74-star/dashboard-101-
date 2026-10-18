@@ -20,6 +20,10 @@ import {
   Sparkles,
   Wand2,
   ChartColumn,
+  Link2,
+  Megaphone,
+  Target,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./ui";
@@ -31,6 +35,9 @@ const NAV = [
   { group: "Workspace", items: [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/analytics", label: "Analytics", icon: ChartColumn },
+    { href: "/goals", label: "Goals", icon: Target },
+    { href: "/agent", label: "Command agent", icon: Bot },
+    { href: "/marketing", label: "Marketing", icon: Megaphone },
     { href: "/leads", label: "Leads", icon: Users },
     { href: "/inbox", label: "Inbox", icon: InboxIcon, badge: "inbox" as const },
     { href: "/engagement", label: "Comments & Enquiries", icon: MessageSquareText, badge: "comments" as const },
@@ -41,6 +48,7 @@ const NAV = [
     { href: "/studio", label: "Creative Studio", icon: Wand2 },
   ]},
   { group: "System", items: [
+    { href: "/connections", label: "Connections", icon: Link2 },
     { href: "/integrations", label: "Integrations", icon: PlugZap },
     { href: "/settings", label: "Settings", icon: Settings },
   ]},
@@ -71,12 +79,12 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+        <div className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[image:var(--gradient-accent)] text-white shadow-[var(--glow)] ring-1 ring-white/20">
           <Sparkles size={18} />
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-semibold">Vanita OS</p>
-          <p className="text-[11px] text-muted">Business operating system</p>
+          <p className="text-[15px] font-semibold tracking-tight">North Star AI OS</p>
+          <p className="text-[11px] font-medium text-muted">Business operating system</p>
         </div>
       </div>
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
@@ -93,8 +101,8 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
                       href={it.href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
-                        active ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface-2 hover:text-fg",
+                        "flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                        active ? "bg-accent text-accent-fg" : "text-fg hover:bg-fg/5",
                       )}
                     >
                       <it.icon size={17} />
@@ -119,16 +127,16 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
 
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-surface lg:block">{sidebar}</aside>
+      <aside className="material fixed inset-y-0 left-0 z-30 hidden w-64 border-r lg:block">{sidebar}</aside>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-64 border-r bg-surface">{sidebar}</aside>
+          <aside className="material absolute inset-y-0 left-0 w-64 border-r">{sidebar}</aside>
         </div>
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-surface/80 px-4 backdrop-blur lg:px-8">
+        <header className="material sticky top-0 z-20 flex h-14 items-center gap-3 border-b px-4 lg:px-8">
           <button className="rounded-lg p-2 hover:bg-surface-2 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
             <Menu size={20} />
           </button>
@@ -184,8 +192,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+        <h1 className="text-[28px] font-bold leading-tight tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-1 text-[15px] text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { json, route } from "@/lib/api";
 
 const Body = z.object({
-  service: z.enum(["AI_VOICE", "WEB_DEV", "DROPSHIPPING"]),
+  service: z.enum(["AI_VOICE", "WEB_DEV"]),
   agent: z.enum(["AI", "HUMAN"]),
   userId: z.string().nullable(),
 });

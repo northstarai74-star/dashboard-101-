@@ -1,10 +1,10 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { db } from "./db";
+import { SESSION_COOKIE, loginDisabled, readSession, type SessionPayload } from "./token";
 
-export const SESSION_COOKIE = "bos_session";
-
-export type SessionPayload = { uid: string; role: string };
+export { SESSION_COOKIE, loginDisabled, readSession };
+export type { SessionPayload };
 
 function secret() {
   const s = process.env.SESSION_SECRET;
@@ -32,18 +32,15 @@ export async function destroySession() {
   (await cookies()).delete(SESSION_COOKIE);
 }
 
-export async function readSession(token?: string): Promise<SessionPayload | null> {
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, secret());
-    return { uid: payload.uid as string, role: payload.role as string };
-  } catch {
-    return null;
-  }
-}
-
 /** Current user from the session cookie (server components / route handlers). */
 export async function getCurrentUser() {
+  if (loginDisabled()) {
+    return db.user.findFirst({
+      where: { role: "ADMIN" },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true, email: true, role: true, title: true, avatarColor: true },
+    });
+  }
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const session = await readSession(token);
   if (!session) return null;

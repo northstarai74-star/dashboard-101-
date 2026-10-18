@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, readSession } from "@/lib/session";
+import { SESSION_COOKIE, loginDisabled, readSession } from "@/lib/token";
 
 // Optimistic gate only: redirects signed-out visitors to /login.
 // Route handlers and server components still verify the user themselves.
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  if (loginDisabled()) return NextResponse.next();
   const session = await readSession(req.cookies.get(SESSION_COOKIE)?.value);
 
   // /login is never redirected away from: a valid JWT can outlive its user row (e.g. after a reseed),

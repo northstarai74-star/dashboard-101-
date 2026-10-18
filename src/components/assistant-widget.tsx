@@ -11,7 +11,7 @@ const STARTERS = ["How is revenue vs expenses this month?", "Which channel is pe
 export function AssistantWidget() {
   const [open, setOpen] = React.useState(false);
   const [messages, setMessages] = React.useState<Msg[]>([
-    { role: "assistant", content: 'Hi! Ask me about your numbers. Type "ask the council" followed by a question to get advice from the five advisors.' },
+    { role: "assistant", content: 'Hi! Ask me about your numbers. Type "ask the council" followed by a question to get advice from the seven advisors.' },
   ]);
   const [input, setInput] = React.useState("");
   const [busy, setBusy] = React.useState(false);

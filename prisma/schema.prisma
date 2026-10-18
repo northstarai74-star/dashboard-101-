@@ -9,7 +9,7 @@ datasource db {
 
 // Enum-like string columns (kept as String for portability).
 // ROLE: ADMIN | MEMBER
-// SERVICE: AI_VOICE | WEB_DEV | DROPSHIPPING | UNASSIGNED
+// SERVICE: AI_VOICE | WEB_DEV | UNASSIGNED
 // STAGE: NEW | CONTACTED | QUALIFIED | PROPOSAL | WON | LOST
 // SOURCE: META_DM | META_COMMENT | META_LEAD_AD | MANUAL
 // AGENT: AI | HUMAN
@@ -168,6 +168,19 @@ model MetaConnection {
   connected     Boolean  @default(false)
   lastSyncAt    DateTime?
   updatedAt     DateTime @updatedAt
+}
+
+// One row per external channel (WHATSAPP, LINKEDIN, YOUTUBE, EMAIL, WEBSITE, FINANCE).
+// `config` holds non-secret fields as JSON; `secretsEnc` holds the encrypted secret fields.
+model Connection {
+  id           String    @id // channel slug, see src/lib/connections.ts
+  config       String    @default("{}")
+  secretsEnc   String?
+  status       String    @default("NOT_CONNECTED") // NOT_CONNECTED | CONNECTED | ERROR
+  accountLabel String?
+  lastCheckedAt DateTime?
+  lastError    String?
+  updatedAt    DateTime  @updatedAt
 }
 
 model Activity {

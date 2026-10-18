@@ -34,7 +34,6 @@ test("safeEqual compares tokens in constant time without throwing on length mism
 test("heuristicClassify routes messages to the right service", () => {
   assert.equal(heuristicClassify("Can your AI receptionist answer missed calls? price?").service, "AI_VOICE");
   assert.equal(heuristicClassify("Need a new website and landing page, budget $2k").service, "WEB_DEV");
-  assert.equal(heuristicClassify("Looking for a dropship supplier, bulk order").service, "DROPSHIPPING");
   assert.equal(heuristicClassify("hello there").service, "UNASSIGNED");
 });
 
@@ -44,9 +43,9 @@ test("templateReply answers with the matching service pitch", () => {
 });
 
 test("heuristicAgentDecision replies normally and hands off when a person is requested", () => {
-  const normal = heuristicAgentDecision("Do you do dropshipping product sourcing?");
+  const normal = heuristicAgentDecision("Do you build websites for restaurants?");
   assert.equal(normal.handoff, false);
-  assert.match(normal.reply, /sourcing/);
+  assert.match(normal.reply, /websites/);
 
   const human = heuristicAgentDecision("Can I talk to a real person please?");
   assert.equal(human.handoff, true);

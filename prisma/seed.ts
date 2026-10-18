@@ -26,15 +26,9 @@ const MESSAGES: Record<string, string[]> = {
     "Can you build a booking web app for my gym? How long would it take?",
     "Do you build Shopify themes? We want a custom redesign.",
   ],
-  DROPSHIPPING: [
-    "Do you have suppliers for fitness products? Looking to start a dropshipping store.",
-    "Can you source a winning product and set up my store? What's the price?",
-    "Interested in bulk order pricing for phone accessories, what's the MOQ?",
-    "Need help with dropshipping product sourcing and fast shipping to the US.",
-  ],
 };
 const SOURCES = ["META_DM", "META_DM", "META_DM", "META_COMMENT", "META_LEAD_AD", "META_LEAD_AD"] as const;
-const SERVICE_VALUE: Record<string, number> = { AI_VOICE: 1500, WEB_DEV: 3000, DROPSHIPPING: 800 };
+const SERVICE_VALUE: Record<string, number> = { AI_VOICE: 1500, WEB_DEV: 3000 };
 
 async function main() {
   const email = process.env.ADMIN_EMAIL ?? "admin@vanita.local";
@@ -58,26 +52,24 @@ async function main() {
     [
       ["Aisha Rahman", "aisha@vanita.local", "Sales Lead", "#ec4899"],
       ["Daniel Cruz", "daniel@vanita.local", "Web Developer", "#3b82f6"],
-      ["Meera Shah", "meera@vanita.local", "Dropshipping Manager", "#f59e0b"],
     ].map(([name, em, title, color]) =>
       db.user.create({ data: { name, email: em, passwordHash: hash, title, avatarColor: color } }),
     ),
   );
-  const [aisha, daniel, meera] = team;
+  const [aisha, daniel] = team;
 
   await db.assignmentRule.createMany({
     data: [
       { service: "AI_VOICE", agent: "AI", userId: aisha.id },
       { service: "WEB_DEV", agent: "HUMAN", userId: daniel.id },
-      { service: "DROPSHIPPING", agent: "AI", userId: meera.id },
     ],
   });
 
-  const owners: Record<string, string> = { AI_VOICE: aisha.id, WEB_DEV: daniel.id, DROPSHIPPING: meera.id };
-  const services = ["AI_VOICE", "WEB_DEV", "DROPSHIPPING"] as const;
+  const owners: Record<string, string> = { AI_VOICE: aisha.id, WEB_DEV: daniel.id };
+  const services = ["AI_VOICE", "WEB_DEV"] as const;
 
   for (let i = 0; i < 64; i++) {
-    const service = i < 6 ? "UNASSIGNED" : services[i % 3 === 0 ? 0 : i % 3 === 1 ? 1 : 2];
+    const service = i < 6 ? "UNASSIGNED" : services[i % 2];
     const name = `${pick(first)} ${pick(last)}`;
     const handle = name.toLowerCase().replace(/\s/g, "_") + Math.floor(rnd() * 90 + 10);
     const source = pick(SOURCES);
@@ -112,7 +104,7 @@ async function main() {
         stage,
         score: service === "UNASSIGNED" ? 20 : Math.floor(40 + rnd() * 58),
         aiSummary: text,
-        assignedAgent: service === "AI_VOICE" || service === "DROPSHIPPING" ? (rnd() > 0.5 ? "AI" : "HUMAN") : "HUMAN",
+        assignedAgent: service === "AI_VOICE" ? (rnd() > 0.5 ? "AI" : "HUMAN") : "HUMAN",
         assignedUserId: service === "UNASSIGNED" ? null : owners[service],
         estimatedValue: value,
         createdAt: created,

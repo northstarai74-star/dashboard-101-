@@ -45,7 +45,6 @@ export async function dashboardStats(rangeDays: number) {
       total: inB.length,
       AI_VOICE: inB.filter((l) => l.service === "AI_VOICE").length,
       WEB_DEV: inB.filter((l) => l.service === "WEB_DEV").length,
-      DROPSHIPPING: inB.filter((l) => l.service === "DROPSHIPPING").length,
     };
   });
 
@@ -59,7 +58,6 @@ export async function dashboardStats(rangeDays: number) {
   return {
     kpis: {
       totalLeads: { value: leads.length, delta: delta(leads.length, prevLeads) },
-      dropshipping: { value: byService.find((b) => b.service === "DROPSHIPPING")!.leads },
       aiVoice: { value: byService.find((b) => b.service === "AI_VOICE")!.leads },
       webDev: { value: byService.find((b) => b.service === "WEB_DEV")!.leads },
       customers: { value: customers, delta: delta(customers, prevCustomers) },

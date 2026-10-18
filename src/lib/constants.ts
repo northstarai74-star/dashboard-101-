@@ -1,4 +1,4 @@
-export const SERVICES = ["AI_VOICE", "WEB_DEV", "DROPSHIPPING"] as const;
+export const SERVICES = ["AI_VOICE", "WEB_DEV"] as const;
 export type Service = (typeof SERVICES)[number] | "UNASSIGNED";
 
 export const SERVICE_META: Record<
@@ -20,14 +20,6 @@ export const SERVICE_META: Record<
     bg: "bg-blue-500/10",
     text: "text-blue-600 dark:text-blue-300",
     ring: "ring-blue-500/20",
-  },
-  DROPSHIPPING: {
-    label: "Dropshipping",
-    short: "Dropshipping",
-    color: "#f59e0b",
-    bg: "bg-amber-500/10",
-    text: "text-amber-600 dark:text-amber-300",
-    ring: "ring-amber-500/20",
   },
   UNASSIGNED: {
     label: "Unassigned",

@@ -7,6 +7,13 @@ const isDuplicate = (err: unknown) => (err as { code?: string })?.code === "P200
 
 type ContactInput = { igUserId?: string; name?: string; handle?: string; email?: string; phone?: string };
 
+/** Channels that can hold a conversation. Instagram is the default for the Meta webhook. */
+export const PLATFORMS = ["INSTAGRAM", "WHATSAPP", "LINKEDIN"] as const;
+export type Platform = (typeof PLATFORMS)[number];
+
+/** Lead source recorded for a DM on each platform (INSTAGRAM keeps the original META_DM value). */
+const dmSource = (platform: string) => (platform === "INSTAGRAM" ? "META_DM" : `${platform}_DM`);
+
 export async function upsertContact(input: ContactInput, source: string) {
   if (input.igUserId) {
     const existing = await db.contact.findUnique({ where: { igUserId: input.igUserId } });
@@ -15,6 +22,10 @@ export async function upsertContact(input: ContactInput, source: string) {
   if (input.email) {
     const byEmail = await db.contact.findFirst({ where: { email: input.email } });
     if (byEmail) return byEmail;
+  }
+  if (input.phone) {
+    const byPhone = await db.contact.findFirst({ where: { phone: input.phone } });
+    if (byPhone) return byPhone;
   }
   try {
     return await db.contact.create({
@@ -75,7 +86,7 @@ export async function createLead(opts: { contactId: string; source: string; text
       aiSummary: cls.summary,
       assignedAgent: assign.agent,
       assignedUserId: assign.userId,
-      estimatedValue: { AI_VOICE: 1500, WEB_DEV: 3000, DROPSHIPPING: 800, UNASSIGNED: 0 }[cls.service],
+      estimatedValue: { AI_VOICE: 1500, WEB_DEV: 3000, UNASSIGNED: 0 }[cls.service],
     },
   });
   await db.activity.createMany({
@@ -91,15 +102,18 @@ export async function createLead(opts: { contactId: string; source: string; text
   return lead;
 }
 
-export async function ingestMessage(m: ContactInput & { text: string; externalId?: string; direction?: "IN" | "OUT"; threadId?: string; at?: Date }) {
+export async function ingestMessage(
+  m: ContactInput & { text: string; externalId?: string; direction?: "IN" | "OUT"; threadId?: string; at?: Date; platform?: Platform },
+) {
   if (m.externalId && (await db.message.findUnique({ where: { externalId: m.externalId } }))) return null;
-  const contact = await upsertContact(m, "META_DM");
+  const platform = m.platform ?? "INSTAGRAM";
+  const contact = await upsertContact(m, dmSource(platform));
   const direction = m.direction ?? "IN";
 
   const convo =
     (m.threadId && (await db.conversation.findUnique({ where: { externalId: m.threadId } }))) ||
-    (await db.conversation.findFirst({ where: { contactId: contact.id } })) ||
-    (await db.conversation.create({ data: { contactId: contact.id, externalId: m.threadId } }));
+    (await db.conversation.findFirst({ where: { contactId: contact.id, platform } })) ||
+    (await db.conversation.create({ data: { contactId: contact.id, externalId: m.threadId, platform } }));
 
   try {
     await db.message.create({
@@ -116,7 +130,7 @@ export async function ingestMessage(m: ContactInput & { text: string; externalId
 
   if (direction === "IN") {
     const open = await db.lead.findFirst({ where: { contactId: contact.id, stage: { notIn: ["WON", "LOST"] } } });
-    if (!open) await createLead({ contactId: contact.id, source: "META_DM", text: m.text });
+    if (!open) await createLead({ contactId: contact.id, source: dmSource(platform), text: m.text });
   }
   return { contactId: contact.id, conversationId: convo.id };
 }

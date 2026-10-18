@@ -22,7 +22,7 @@ export const GET = route<Ctx>(async (_req, { params }) => {
 
 const Patch = z.object({
   stage: z.enum(["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"]).optional(),
-  service: z.enum(["AI_VOICE", "WEB_DEV", "DROPSHIPPING", "UNASSIGNED"]).optional(),
+  service: z.enum(["AI_VOICE", "WEB_DEV", "UNASSIGNED"]).optional(),
   assignedAgent: z.enum(["AI", "HUMAN"]).optional(),
   assignedUserId: z.string().nullable().optional(),
   estimatedValue: z.number().min(0).optional(),

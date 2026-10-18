@@ -6,7 +6,7 @@ import { SERVICE_META } from "@/lib/constants";
 
 const Body = z.object({
   ids: z.array(z.string()).min(1).max(500),
-  service: z.enum(["AI_VOICE", "WEB_DEV", "DROPSHIPPING"]).optional(),
+  service: z.enum(["AI_VOICE", "WEB_DEV"]).optional(),
   assignedUserId: z.string().nullable().optional(),
   assignedAgent: z.enum(["AI", "HUMAN"]).optional(),
 });
