@@ -24,6 +24,8 @@ import {
   Megaphone,
   Target,
   Bot,
+  CheckSquare,
+  Users2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./ui";
@@ -36,6 +38,8 @@ const NAV = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/analytics", label: "Analytics", icon: ChartColumn },
     { href: "/goals", label: "Goals", icon: Target },
+    { href: "/todos", label: "To-do", icon: CheckSquare },
+    { href: "/council-room", label: "Council Room", icon: Users2 },
     { href: "/agent", label: "Command agent", icon: Bot },
     { href: "/marketing", label: "Marketing", icon: Megaphone },
     { href: "/leads", label: "Leads", icon: Users },

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.mjs",
+    "dev:app": "next dev",
+    "room": "node council-room/app/server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

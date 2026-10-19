@@ -44,13 +44,30 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const { range } = await searchParams;
   const rangeDays = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
 
-  const [s, unread, unassigned, channels] = await Promise.all([
+  const [s, unread, unassigned, channels, users] = await Promise.all([
     dashboardStats(rangeDays),
     db.conversation.aggregate({ _sum: { unread: true } }),
     db.lead.count({ where: { assignedUserId: null, stage: { notIn: ["WON", "LOST"] } } }),
     listChannels(),
+    db.user.findMany({
+      orderBy: { createdAt: "asc" },
+      include: { leads: { select: { stage: true, deals: { select: { amount: true } } } } },
+    }),
   ]);
   const k = s.kpis;
+  const team = users.map((u) => {
+    const open = u.leads.filter((l) => !["WON", "LOST"].includes(l.stage));
+    return {
+      id: u.id,
+      name: u.name,
+      title: u.title,
+      avatarColor: u.avatarColor,
+      openLeads: open.length,
+      won: u.leads.filter((l) => l.stage === "WON").length,
+      revenue: u.leads.flatMap((l) => l.deals).reduce((sum, d) => sum + d.amount, 0),
+    };
+  });
+  const maxOpen = Math.max(1, ...team.map((m) => m.openLeads));
   const totalLeads = s.byService.reduce((n, b) => n + b.leads, 0);
   const unreadCount = unread._sum.unread ?? 0;
   const connected = channels.filter((c) => c.status === "CONNECTED").length;
@@ -186,6 +203,42 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </ul>
         </Card>
       </div>
+
+      {/* Team workload */}
+      <Card className="mt-4">
+        <CardHeader
+          title="Team workload"
+          subtitle="Open leads and results per team member"
+          action={<Link href="/team" className="text-xs font-medium text-accent hover:underline">Manage team</Link>}
+        />
+        {team.length === 0 ? (
+          <div className="px-5 pb-5"><Empty title="No team members yet" /></div>
+        ) : (
+          <ul className="grid gap-3 px-5 pb-5 sm:grid-cols-2 xl:grid-cols-3">
+            {team.map((m) => (
+              <li key={m.id}>
+                <Link href="/team" className="block rounded-xl border p-4 transition hover:border-accent/40 hover:bg-surface-2/50">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={m.name} color={m.avatarColor} size={36} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{m.name}</p>
+                      <p className="truncate text-xs text-muted">{m.title ?? "Team member"}</p>
+                    </div>
+                    <span className="text-sm font-semibold tabular-nums">{m.openLeads}<span className="font-normal text-muted"> open</span></span>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                    <div className="h-full rounded-full bg-accent" style={{ width: `${(m.openLeads / maxOpen) * 100}%` }} />
+                  </div>
+                  <div className="mt-3 flex justify-between text-xs text-muted">
+                    <span>{m.won} won</span>
+                    <span className="font-medium text-fg tabular-nums">{money(m.revenue, true)}</span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       {/* Latest leads */}
       <Card className="mt-4">

@@ -247,6 +247,30 @@ model Expense {
   @@index([date])
 }
 
+// A saved council analysis of an issue, run against the business data at the time it was asked.
+model DebateResult {
+  id        String   @id @default(cuid())
+  question  String
+  mode      String   @default("offline") // live | offline
+  verdict   String
+  actions   Json
+  advisors  Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Todo {
+  id        String    @id @default(cuid())
+  title     String
+  done      Boolean   @default(false)
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([done, createdAt])
+}
+
 // Higgsfield image generations. STATUS: queued | in_progress | completed | failed | nsfw
 model Creative {
   id        String   @id @default(cuid())
