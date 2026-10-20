@@ -69,7 +69,7 @@ test("offlineCouncil returns five advisors, a verdict and actions from the numbe
   const c = offlineCouncil("where next?", snapshot);
   assert.equal(c.mode, "offline");
   assert.equal(c.advisors.length, 5);
-  assert.ok(c.advisors[3].advice.includes("backlog"), "Operator flags the reply backlog");
-  assert.ok(c.advisors[2].advice.includes("10% margin"), "CFO reports the margin");
+  assert.ok(c.advisors[3].advice.includes("backlog"), "Martell flags the reply backlog");
+  assert.ok(c.advisors[4].advice.includes("10% margin"), "Buffett reports the margin");
   assert.ok(c.actions.length >= 1 && c.actions.length <= 5);
 });

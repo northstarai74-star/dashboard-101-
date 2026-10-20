@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The Council Room is a separate standalone app with vendored, minified libraries.
+    "council-room/**",
   ]),
 ]);
 

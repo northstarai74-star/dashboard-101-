@@ -58,7 +58,7 @@ export function AgentConsole() {
       <Card className="flex min-h-[60vh] flex-col">
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           {turns.length === 0 && (
-            <p className="text-sm text-muted">Try a command below, or type your own. Example: "move lead abc to proposal" or "add a note to lead abc: called back Monday".</p>
+            <p className="text-sm text-muted">Try a command below, or type your own. Example: &quot;move lead abc to proposal&quot; or &quot;add a note to lead abc: called back Monday&quot;.</p>
           )}
           {turns.map((t, i) =>
             t.role === "user" ? (
@@ -126,7 +126,7 @@ export function AgentConsole() {
           ))}
         </div>
         <p className="mt-5 text-xs text-muted">
-          The agent can read your numbers, goals, leads and connections, change a lead's stage and add internal notes. It cannot message customers, spend money or delete records.
+          The agent can read your numbers, goals, leads and connections, change a lead&apos;s stage and add internal notes. It cannot message customers, spend money or delete records.
         </p>
       </Card>
     </div>
