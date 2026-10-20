@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { json, route } from "@/lib/api";
+import { canAccessLead, isAdmin } from "@/lib/access";
 import { SERVICE_META, STAGE_META } from "@/lib/constants";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export const GET = route<Ctx>(async (_req, { params }) => {
+export const GET = route<Ctx>(async (_req, { params }, me) => {
   const { id } = await params;
   const lead = await db.lead.findUnique({
     where: { id },
@@ -16,7 +17,7 @@ export const GET = route<Ctx>(async (_req, { params }) => {
       deals: true,
     },
   });
-  if (!lead) return json({ error: "Not found" }, 404);
+  if (!lead || !canAccessLead(me, lead)) return json({ error: "Not found" }, 404);
   return json(lead);
 });
 
@@ -32,7 +33,11 @@ export const PATCH = route<Ctx>(async (req, { params }, user) => {
   const { id } = await params;
   const patch = Patch.parse(await req.json());
   const before = await db.lead.findUnique({ where: { id } });
-  if (!before) return json({ error: "Not found" }, 404);
+  if (!before || !canAccessLead(user, before)) return json({ error: "Not found" }, 404);
+  // A team member can take a lead for themselves or hand it back, but not push it onto someone else.
+  if (!isAdmin(user) && patch.assignedUserId && patch.assignedUserId !== user.id) {
+    return json({ error: "You can only assign leads to yourself" }, 403);
+  }
   if (patch.stage === "WON" && before.stage !== "WON") {
     return json({ error: "Use convert to mark a lead as won so the revenue is recorded" }, 400);
   }

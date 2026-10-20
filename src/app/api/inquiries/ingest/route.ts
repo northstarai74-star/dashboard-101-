@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (!body.success) return json({ error: body.error.issues.map((i) => i.message).join("; ") }, 400);
   const b = body.data;
 
-  if (!(await getCurrentUser())) {
+  if ((await getCurrentUser())?.role !== "ADMIN") {
     const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null;
     const creds = await channelCredentials(b.platform as ChannelId);
     if (!creds.ingestToken || !token || !safeEqual(token, creds.ingestToken)) {

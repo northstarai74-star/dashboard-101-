@@ -15,7 +15,9 @@ npm run db:seed          # optional: demo data + the admin user (see .env)
 npm run dev         # http://localhost:3000
 ```
 
-Login: just `ADMIN_PASSWORD` from `.env` (defaults in `.env.example`) — the email field is optional. Entering an email (`ADMIN_EMAIL`) still works and is the unambiguous way to sign in once team members have their own passwords; without an email, the password is matched against all accounts (admins first), so keep passwords unique. Change the password and both secrets in `.env` before using real data.
+Login: the owner signs in with `ADMIN_PASSWORD` from `.env` (defaults in `.env.example`) — the email field can stay empty (an empty email only matches admin accounts). Team members sign in with **their own email and password**. Change the password and both secrets in `.env` before using real data.
+
+**Team accounts.** The sign-in page has a **Join as team member** tab. Anyone who knows the **team access code** can create an account with their own password; they are always a team member, never an admin. Set or replace the code in Settings → *Team sign-up* (stored hashed, never shown again), or set `TEAM_SIGNUP_CODE` in the environment (min 8 characters; a code saved in Settings wins). With no code, nobody can sign up. Each member sees only their own workspace: *My dashboard*, *My leads* (assigned to them plus unassigned ones to pick up), the Inbox and contacts for those leads, their own to-dos and Creative Studio images, and a password change. Analytics, Goals, Council Room, Command agent, Marketing, Comments & Enquiries, Team, Connections, Integrations and the assistant are owner-only (enforced on the pages and the APIs). From **Team → View workspace** the owner sees any member's workspace.
 `npm run db:seed` **wipes leads/contacts/team** and recreates demo data — don't run it once you have real data.
 
 ## What's inside

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { json, route } from "@/lib/api";
+import { isAdmin } from "@/lib/access";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -9,16 +10,19 @@ const TodoPatch = z.object({
   done: z.boolean().optional(),
 });
 
-export const PATCH = route<Ctx>(async (req, { params }) => {
+/** A to-do can be changed by its owner or an admin. Ownerless (pre-accounts) to-dos are admin-only. */
+const visibleTo = (me: { id: string; role: string }, id: string) => ({ id, ...(isAdmin(me) ? {} : { userId: me.id }) });
+
+export const PATCH = route<Ctx>(async (req, { params }, me) => {
   const { id } = await params;
   const input = TodoPatch.parse(await req.json());
-  const todo = await db.todo.update({ where: { id }, data: input }).catch(() => null);
-  if (!todo) return json({ error: "Not found" }, 404);
-  return json(todo);
+  const found = await db.todo.findFirst({ where: visibleTo(me, id), select: { id: true } });
+  if (!found) return json({ error: "Not found" }, 404);
+  return json(await db.todo.update({ where: { id }, data: input }));
 });
 
-export const DELETE = route<Ctx>(async (_req, { params }) => {
+export const DELETE = route<Ctx>(async (_req, { params }, me) => {
   const { id } = await params;
-  await db.todo.delete({ where: { id } }).catch(() => null);
+  await db.todo.deleteMany({ where: visibleTo(me, id) });
   return json({ ok: true });
 });

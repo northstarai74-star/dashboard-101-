@@ -12,7 +12,7 @@ const Body = z.object({
   message: z.string().min(1, "Describe what the lead wants"),
 });
 
-export const POST = route(async (req) => {
+export const POST = route(async (req, _ctx, me) => {
   const b = Body.parse(await req.json());
   const contact = await db.contact.create({
     data: {
@@ -24,6 +24,10 @@ export const POST = route(async (req) => {
       source: "MANUAL",
     },
   });
-  const lead = await createLead({ contactId: contact.id, source: "MANUAL", text: b.message });
+  let lead = await createLead({ contactId: contact.id, source: "MANUAL", text: b.message });
+  // Auto-assignment may have routed it to someone else; a lead a team member adds starts in their own list.
+  if (me.role !== "ADMIN") {
+    lead = await db.lead.update({ where: { id: lead.id }, data: { assignedUserId: me.id, assignedAgent: "HUMAN" } });
+  }
   return json(lead, 201);
 });

@@ -46,7 +46,7 @@ export function ContactForm({ initial, onDone, onCancel, id }: { initial?: Parti
   );
 }
 
-export function ContactsView({ contacts }: { contacts: Row[] }) {
+export function ContactsView({ contacts, canAdd }: { contacts: Row[]; canAdd: boolean }) {
   const router = useRouter();
   const [q, setQ] = React.useState("");
   const [adding, setAdding] = React.useState(false);
@@ -61,7 +61,7 @@ export function ContactsView({ contacts }: { contacts: Row[] }) {
           <Input className="pl-9" placeholder="Search contacts…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <span className="text-xs text-muted">{rows.length} contacts</span>
-        <Button variant="primary" onClick={() => setAdding(true)}><Plus size={16} /> Add contact</Button>
+        {canAdd && <Button variant="primary" onClick={() => setAdding(true)}><Plus size={16} /> Add contact</Button>}
       </Card>
 
       <Card className="overflow-hidden">

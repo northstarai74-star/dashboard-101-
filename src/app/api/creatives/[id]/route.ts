@@ -1,14 +1,15 @@
 import { db } from "@/lib/db";
 import { json, route } from "@/lib/api";
+import { isAdmin } from "@/lib/access";
 import { FINAL_STATUSES, fetchJob } from "@/lib/higgsfield";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 /** Returns the creative, refreshing its status from Higgsfield while the job is still running. */
-export const GET = route<Ctx>(async (_req, { params }) => {
+export const GET = route<Ctx>(async (_req, { params }, me) => {
   const { id } = await params;
   const creative = await db.creative.findUnique({ where: { id } });
-  if (!creative) return json({ error: "Not found" }, 404);
+  if (!creative || (!isAdmin(me) && creative.userId !== me.id)) return json({ error: "Not found" }, 404);
   if (FINAL_STATUSES.includes(creative.status) || !creative.requestId) return json(creative);
 
   try {
@@ -32,8 +33,8 @@ export const GET = route<Ctx>(async (_req, { params }) => {
   }
 });
 
-export const DELETE = route<Ctx>(async (_req, { params }) => {
+export const DELETE = route<Ctx>(async (_req, { params }, me) => {
   const { id } = await params;
-  await db.creative.delete({ where: { id } }).catch(() => null);
+  await db.creative.deleteMany({ where: { id, ...(isAdmin(me) ? {} : { userId: me.id }) } });
   return json({ ok: true });
 });

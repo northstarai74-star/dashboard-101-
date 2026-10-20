@@ -30,4 +30,4 @@ export const GET = route(async () => {
     select: { id: true, provider: true, label: true, keyHint: true, status: true, priority: true, usageCount: true, lastUsedAt: true, lastError: true },
   });
   return json(keys);
-});
+}, { admin: true });

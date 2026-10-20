@@ -2,6 +2,7 @@ import { getGoalSnapshot } from "@/lib/goals";
 import { PageHeader } from "@/components/shell";
 import { Card, CardHeader } from "@/components/ui";
 import { cn, money } from "@/lib/utils";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ function ProgressCard({ label, value, target, progress, note }: { label: string;
 }
 
 export default async function GoalsPage() {
+  await requireAdmin();
   const s = await getGoalSnapshot();
   const { goals } = s;
   const maxRevenue = Math.max(goals.targetMrr, ...s.monthly.map((m) => m.revenue));

@@ -4,10 +4,12 @@ import { getAnalyticsSnapshot } from "@/lib/analytics";
 import { PageHeader } from "@/components/shell";
 import { AnalyticsView } from "@/components/analytics-view";
 import { cn } from "@/lib/utils";
+import { requireAdmin } from "@/lib/access";
 
 const RANGES = [7, 30, 90];
 
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+  await requireAdmin();
   const { range } = await searchParams;
   const rangeDays = RANGES.includes(Number(range)) ? Number(range) : 30;
   const [snapshot, expenses] = await Promise.all([getAnalyticsSnapshot(rangeDays), db.expense.findMany({ orderBy: { date: "desc" }, take: 12 })]);

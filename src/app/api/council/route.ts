@@ -9,4 +9,4 @@ export const POST = route(async (req) => {
   const { question } = Body.parse(await req.json());
   const snapshot = await getAnalyticsSnapshot(30);
   return json(await askCouncil(question, snapshot));
-});
+}, { admin: true });

@@ -3,10 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { Button, Card, CardHeader, Empty, Input } from "./ui";
+import { Button, Card, CardHeader, Empty, Input, Select } from "./ui";
 import { cn } from "@/lib/utils";
 
-export type TodoRow = { id: string; title: string; done: boolean; dueDate: string | null };
+export type TodoRow = { id: string; title: string; done: boolean; dueDate: string | null; assignee: string | null };
 
 async function request(url: string, init?: RequestInit) {
   const res = await fetch(url, { ...init, headers: { "Content-Type": "application/json" } });
@@ -15,10 +15,11 @@ async function request(url: string, init?: RequestInit) {
   return data;
 }
 
-export function TodosView({ initial }: { initial: TodoRow[] }) {
+export function TodosView({ initial, people, meId, showAssignee }: { initial: TodoRow[]; people: { id: string; name: string }[]; meId: string; showAssignee: boolean }) {
   const router = useRouter();
   const [title, setTitle] = React.useState("");
   const [dueDate, setDueDate] = React.useState("");
+  const [who, setWho] = React.useState(meId);
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -43,7 +44,7 @@ export function TodosView({ initial }: { initial: TodoRow[] }) {
     run(async () => {
       await request("/api/todos", {
         method: "POST",
-        body: JSON.stringify({ title, dueDate: dueDate || null }),
+        body: JSON.stringify({ title, dueDate: dueDate || null, userId: who }),
       });
       setTitle("");
       setDueDate("");
@@ -66,6 +67,11 @@ export function TodosView({ initial }: { initial: TodoRow[] }) {
             aria-label="New to-do"
           />
           <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="sm:w-44" aria-label="Due date" />
+          {people.length > 1 && (
+            <Select value={who} onChange={(e) => setWho(e.target.value)} className="sm:w-44" aria-label="Assign to">
+              {people.map((p) => <option key={p.id} value={p.id}>{p.id === meId ? "Me" : p.name}</option>)}
+            </Select>
+          )}
           <Button type="submit" disabled={busy || !title.trim()}>
             Add to-do
           </Button>
@@ -80,7 +86,7 @@ export function TodosView({ initial }: { initial: TodoRow[] }) {
         ) : (
           <ul className="mt-3 divide-y">
             {open.map((t) => (
-              <TodoItem key={t.id} todo={t} busy={busy} onToggle={toggle} onDelete={remove} />
+              <TodoItem key={t.id} todo={t} busy={busy} showAssignee={showAssignee} onToggle={toggle} onDelete={remove} />
             ))}
           </ul>
         )}
@@ -91,7 +97,7 @@ export function TodosView({ initial }: { initial: TodoRow[] }) {
           <CardHeader title="Done" subtitle={`${finished.length} completed`} />
           <ul className="mt-3 divide-y">
             {finished.map((t) => (
-              <TodoItem key={t.id} todo={t} busy={busy} onToggle={toggle} onDelete={remove} />
+              <TodoItem key={t.id} todo={t} busy={busy} showAssignee={showAssignee} onToggle={toggle} onDelete={remove} />
             ))}
           </ul>
         </Card>
@@ -103,11 +109,13 @@ export function TodosView({ initial }: { initial: TodoRow[] }) {
 function TodoItem({
   todo,
   busy,
+  showAssignee,
   onToggle,
   onDelete,
 }: {
   todo: TodoRow;
   busy: boolean;
+  showAssignee: boolean;
   onToggle: (t: TodoRow) => void;
   onDelete: (t: TodoRow) => void;
 }) {
@@ -123,7 +131,13 @@ function TodoItem({
       />
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-sm font-medium", todo.done && "text-muted line-through")}>{todo.title}</p>
-        {todo.dueDate && <p className="text-xs text-muted">Due {todo.dueDate}</p>}
+        {(todo.dueDate || showAssignee) && (
+          <p className="text-xs text-muted">
+            {todo.dueDate && `Due ${todo.dueDate}`}
+            {todo.dueDate && showAssignee && " · "}
+            {showAssignee && (todo.assignee ?? "Owner")}
+          </p>
+        )}
       </div>
       <button
         onClick={() => onDelete(todo)}

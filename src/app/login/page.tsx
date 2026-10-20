@@ -5,28 +5,42 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Mic, Globe } from "lucide-react";
 import { Button, Input, Label } from "@/components/ui";
 
+type Mode = "signin" | "join";
+
 export default function LoginPage() {
   const router = useRouter();
+  const [mode, setMode] = React.useState<Mode>("signin");
+  const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [confirm, setConfirm] = React.useState("");
+  const [code, setCode] = React.useState("");
   const [error, setError] = React.useState("");
   const [remember, setRemember] = React.useState(true);
   const [busy, setBusy] = React.useState(false);
 
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError("");
+    setPassword("");
+    setConfirm("");
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
     setError("");
-    const res = await fetch("/api/auth/login", {
+    if (mode === "join" && password !== confirm) return setError("The two passwords don't match");
+    setBusy(true);
+    const res = await fetch(mode === "join" ? "/api/auth/signup" : "/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password, remember }),
+      body: JSON.stringify(mode === "join" ? { name: name.trim(), email: email.trim(), password, code: code.trim() } : { email: email.trim(), password, remember }),
     });
     if (res.ok) {
       router.replace("/");
       router.refresh();
     } else {
-      setError((await res.json().catch(() => ({}))).error ?? `Sign in failed (server returned ${res.status})`);
+      setError((await res.json().catch(() => ({}))).error ?? `${mode === "join" ? "Sign up" : "Sign in"} failed (server returned ${res.status})`);
       setBusy(false);
     }
   }
@@ -60,25 +74,70 @@ export default function LoginPage() {
 
       <div className="flex items-center justify-center p-6">
         <form onSubmit={submit} className="animate-in w-full max-w-sm space-y-5">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-            <p className="mt-1 text-sm text-muted">Sign in to your workspace</p>
+          <div className="grid grid-cols-2 gap-1 rounded-xl border bg-surface-2 p-1 text-sm font-medium" role="tablist">
+            {([["signin", "Sign in"], ["join", "Join as team member"]] as const).map(([m, label]) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                onClick={() => switchMode(m)}
+                className={mode === m ? "rounded-lg bg-surface px-3 py-2 shadow-sm" : "rounded-lg px-3 py-2 text-muted hover:text-fg"}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <div>
-            <Label>Email <span className="font-normal text-muted">(optional)</span></Label>
-            <Input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            <h1 className="text-2xl font-semibold tracking-tight">{mode === "join" ? "Create your team account" : "Welcome back"}</h1>
+            <p className="mt-1 text-sm text-muted">
+              {mode === "join" ? "Ask the owner for the team access code. You'll get your own workspace and password." : "Sign in to your workspace"}
+            </p>
+          </div>
+          {mode === "join" && (
+            <div>
+              <Label>Full name</Label>
+              <Input required autoFocus autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+            </div>
+          )}
+          <div>
+            <Label>Email {mode === "signin" && <span className="font-normal text-muted">(the owner can leave this blank)</span>}</Label>
+            <Input type="email" required={mode === "join"} autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </div>
           <div>
-            <Label>Password</Label>
-            <Input type="password" required autoFocus autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <Label>{mode === "join" ? "Choose a password (min 8)" : "Password"}</Label>
+            <Input
+              type="password"
+              required
+              minLength={mode === "join" ? 8 : undefined}
+              autoFocus={mode === "signin"}
+              autoComplete={mode === "join" ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
           </div>
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 accent-indigo-500" />
-            Remember me for 30 days
-          </label>
+          {mode === "join" && (
+            <>
+              <div>
+                <Label>Confirm password</Label>
+                <Input type="password" required minLength={8} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" />
+              </div>
+              <div>
+                <Label>Team access code</Label>
+                <Input type="password" required autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)} placeholder="From the owner" />
+              </div>
+            </>
+          )}
+          {mode === "signin" && (
+            <label className="flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 accent-indigo-500" />
+              Remember me for 30 days
+            </label>
+          )}
           {error && <p role="alert" className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600">{error}</p>}
           <Button type="submit" variant="primary" className="w-full" disabled={busy}>
-            {busy ? "Signing in…" : "Sign in"}
+            {busy ? (mode === "join" ? "Creating account…" : "Signing in…") : mode === "join" ? "Create account" : "Sign in"}
           </Button>
         </form>
       </div>

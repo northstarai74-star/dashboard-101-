@@ -2,10 +2,12 @@ import { getCurrentUser } from "@/lib/session";
 import { listChannels } from "@/lib/connections";
 import { PageHeader } from "@/components/shell";
 import { ConnectionsView } from "@/components/connections-view";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConnectionsPage() {
+  await requireAdmin();
   const [me, channels] = await Promise.all([getCurrentUser(), listChannels()]);
   return (
     <>

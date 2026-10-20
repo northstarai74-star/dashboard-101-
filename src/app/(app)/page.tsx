@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, BadgeCheck, DollarSign, Inbox, Link2, Mic, TrendingUp, UserPlus, Users, Globe } from "lucide-react";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { memberWorkspace } from "@/lib/member";
+import { MemberWorkspace } from "@/components/member-workspace";
 import { dashboardStats } from "@/lib/stats";
 import { listChannels } from "@/lib/connections";
 import { PageHeader } from "@/components/shell";
@@ -40,7 +44,22 @@ function Headline({ label, value, delta, icon: Icon, tone }: { label: string; va
   );
 }
 
+/** Admins get the business-wide dashboard; each team member gets their own workspace. */
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+  const me = await getCurrentUser();
+  if (!me) redirect("/login");
+  if (me.role === "ADMIN") return <AdminDashboard searchParams={searchParams} />;
+
+  const w = await memberWorkspace(me.id);
+  return (
+    <>
+      <PageHeader title={`Welcome, ${me.name.split(" ")[0]}`} subtitle="Your leads, results and to-dos" />
+      <MemberWorkspace w={w} />
+    </>
+  );
+}
+
+async function AdminDashboard({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const { range } = await searchParams;
   const rangeDays = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
 
@@ -217,7 +236,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <ul className="grid gap-3 px-5 pb-5 sm:grid-cols-2 xl:grid-cols-3">
             {team.map((m) => (
               <li key={m.id}>
-                <Link href="/team" className="block rounded-xl border p-4 transition hover:border-accent/40 hover:bg-surface-2/50">
+                <Link href={`/team/${m.id}`} className="block rounded-xl border p-4 transition hover:border-accent/40 hover:bg-surface-2/50">
                   <div className="flex items-center gap-3">
                     <Avatar name={m.name} color={m.avatarColor} size={36} />
                     <div className="min-w-0 flex-1">

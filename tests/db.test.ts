@@ -134,3 +134,23 @@ test("ADMIN_EMAIL + ADMIN_PASSWORD recover the admin account", { skip }, async (
   process.env.ADMIN_PASSWORD = PUBLISHED_DEFAULT_PASSWORD;
   assert.equal(await signInWithEnvAdmin(adminEmail, PUBLISHED_DEFAULT_PASSWORD), null);
 });
+
+test("team access code is stored hashed, verifies, and can be removed", { skip }, async (t) => {
+  const { db } = await import("../src/lib/db");
+  const { setSignupCode, verifySignupCode, signupCodeState, clearSignupCode } = await import("../src/lib/team-code");
+  const prev = await db.setting.findUnique({ where: { key: "teamSignupCodeHash" } });
+  t.after(async () => {
+    if (prev) await db.setting.upsert({ where: { key: prev.key }, create: prev, update: { value: prev.value } });
+    else await clearSignupCode();
+  });
+
+  const code = `code-${randomUUID()}`;
+  await setSignupCode(code);
+  assert.deepEqual(await signupCodeState(), { enabled: true, source: "settings" });
+  assert.equal(await verifySignupCode(code), true);
+  assert.equal(await verifySignupCode(`${code}x`), false);
+  assert.notEqual((await db.setting.findUniqueOrThrow({ where: { key: "teamSignupCodeHash" } })).value, code);
+
+  await clearSignupCode();
+  assert.equal(await verifySignupCode(code), false);
+});

@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
 import { PageHeader } from "@/components/shell";
 import { StudioView } from "@/components/studio-view";
@@ -6,8 +8,10 @@ import { StudioView } from "@/components/studio-view";
 export const dynamic = "force-dynamic";
 
 export default async function StudioPage() {
+  const me = await getCurrentUser();
+  if (!me) redirect("/login");
   const [creatives, settings, keys] = await Promise.all([
-    db.creative.findMany({ orderBy: { createdAt: "desc" }, take: 60, include: { user: { select: { name: true } } } }),
+    db.creative.findMany({ where: me.role === "ADMIN" ? {} : { userId: me.id }, orderBy: { createdAt: "desc" }, take: 60, include: { user: { select: { name: true } } } }),
     getSettings(),
     db.apiKey.count({ where: { provider: "HIGGSFIELD", status: "ACTIVE" } }),
   ]);

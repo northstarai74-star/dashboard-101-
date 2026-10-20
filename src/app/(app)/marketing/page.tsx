@@ -1,8 +1,10 @@
 import { getMarketingSnapshot } from "@/lib/marketing";
 import { PageHeader } from "@/components/shell";
 import { MarketingView } from "@/components/marketing-view";
+import { requireAdmin } from "@/lib/access";
 
 export default async function MarketingPage() {
+  await requireAdmin();
   const snapshot = await getMarketingSnapshot();
   return (
     <>

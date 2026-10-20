@@ -1,9 +1,11 @@
 import { PageHeader } from "@/components/shell";
 import { AgentConsole } from "@/components/agent-console";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
-export default function AgentPage() {
+export default async function AgentPage() {
+  await requireAdmin();
   return (
     <>
       <PageHeader

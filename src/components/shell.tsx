@@ -33,7 +33,10 @@ import { Avatar } from "./ui";
 type Counts = { inbox: number; comments: number };
 type U = { name: string; email: string; role: string; avatarColor: string };
 
-const NAV = [
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; badge?: "inbox" | "comments" };
+type NavGroup = { group: string; items: NavItem[] };
+
+const ADMIN_NAV: NavGroup[] = [
   { group: "Workspace", items: [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/analytics", label: "Analytics", icon: ChartColumn },
@@ -54,6 +57,21 @@ const NAV = [
   { group: "System", items: [
     { href: "/connections", label: "Connections", icon: Link2 },
     { href: "/integrations", label: "Integrations", icon: PlugZap },
+    { href: "/settings", label: "Settings", icon: Settings },
+  ]},
+];
+
+/** A team member's workspace: their own leads, conversations, contacts and tasks. The owner-level tools aren't listed. */
+const MEMBER_NAV: NavGroup[] = [
+  { group: "My workspace", items: [
+    { href: "/", label: "My dashboard", icon: LayoutDashboard },
+    { href: "/todos", label: "My to-dos", icon: CheckSquare },
+    { href: "/leads", label: "My leads", icon: Users },
+    { href: "/inbox", label: "Inbox", icon: InboxIcon, badge: "inbox" as const },
+    { href: "/contacts", label: "My contacts", icon: Contact2 },
+    { href: "/studio", label: "Creative Studio", icon: Wand2 },
+  ]},
+  { group: "Account", items: [
     { href: "/settings", label: "Settings", icon: Settings },
   ]},
 ];
@@ -80,6 +98,9 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
     router.refresh();
   }
 
+  const isAdmin = user.role === "ADMIN";
+  const nav = isAdmin ? ADMIN_NAV : MEMBER_NAV;
+
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-5 py-5">
@@ -88,11 +109,11 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
         </div>
         <div className="leading-tight">
           <p className="text-[15px] font-semibold tracking-tight">North Star AI OS</p>
-          <p className="text-[11px] font-medium text-muted">Business operating system</p>
+          <p className="text-[11px] font-medium text-muted">{isAdmin ? "Business operating system" : "Team workspace"}</p>
         </div>
       </div>
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-        {NAV.map((g) => (
+        {nav.map((g) => (
           <div key={g.group}>
             <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">{g.group}</p>
             <ul className="space-y-0.5">
@@ -120,7 +141,7 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
           </div>
         ))}
       </nav>
-      {demoMode && (
+      {demoMode && isAdmin && (
         <div className="m-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
           <p className="font-semibold text-amber-600 dark:text-amber-300">Demo mode</p>
           <p className="mt-0.5 text-muted">Showing sample data. Connect Meta in Integrations, then turn off demo mode in Settings.</p>
@@ -155,7 +176,7 @@ export function Shell({ user, counts, demoMode, children }: { user: U; counts: C
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search leads, contacts, handles…"
+              placeholder={isAdmin ? "Search leads, contacts, handles…" : "Search your leads…"}
               className="h-10 w-full rounded-xl border bg-bg pl-9 pr-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </form>

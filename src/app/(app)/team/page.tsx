@@ -2,10 +2,12 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { PageHeader } from "@/components/shell";
 import { TeamView } from "@/components/team-view";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeamPage() {
+  await requireAdmin();
   const me = await getCurrentUser();
   const [users, rules] = await Promise.all([
     db.user.findMany({

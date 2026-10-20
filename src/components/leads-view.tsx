@@ -29,7 +29,7 @@ async function call(url: string, method: string, body?: unknown) {
   return data;
 }
 
-export function LeadsView({ leads, users, initialQuery, initialOpen, initialService }: { leads: LeadRow[]; users: User[]; initialQuery: string; initialOpen: string | null; initialService: string }) {
+export function LeadsView({ leads, users, initialQuery, initialOpen, initialService, canBulk }: { leads: LeadRow[]; users: User[]; initialQuery: string; initialOpen: string | null; initialService: string; canBulk: boolean }) {
   const router = useRouter();
   const [view, setView] = React.useState<"table" | "board">("table");
   const [q, setQ] = React.useState(initialQuery);
@@ -120,7 +120,7 @@ export function LeadsView({ leads, users, initialQuery, initialOpen, initialServ
             <Button variant="primary" onClick={() => setCreating(true)}><Plus size={16} /> New lead</Button>
           </div>
         </div>
-        {selected.size > 0 && (
+        {canBulk && selected.size > 0 && (
           <div className="animate-in mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-accent/10 px-3 py-2 text-sm">
             <span className="font-medium">{selected.size} selected</span>
             <span className="text-muted">Assign to:</span>
@@ -146,7 +146,7 @@ export function LeadsView({ leads, users, initialQuery, initialOpen, initialServ
               <thead>
                 <tr className="border-b bg-surface-2/60 text-left text-xs text-muted">
                   <th className="w-10 px-4 py-3">
-                    <input type="checkbox" aria-label="Select all" checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(filtered.map((l) => l.id)))} />
+                    {canBulk && <input type="checkbox" aria-label="Select all" checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(filtered.map((l) => l.id)))} />}
                   </th>
                   <th className="px-3 py-3 font-medium">Contact</th>
                   <th className="px-3 py-3 font-medium">Service</th>
@@ -164,7 +164,7 @@ export function LeadsView({ leads, users, initialQuery, initialOpen, initialServ
                   return (
                     <tr key={l.id} onClick={() => setOpenId(l.id)} className="cursor-pointer border-b last:border-0 hover:bg-surface-2/50">
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <input type="checkbox" aria-label={`Select ${l.contact.name}`} checked={selected.has(l.id)} onChange={() => setSelected((s) => { const n = new Set(s); if (n.has(l.id)) n.delete(l.id); else n.add(l.id); return n; })} />
+                        {canBulk && <input type="checkbox" aria-label={`Select ${l.contact.name}`} checked={selected.has(l.id)} onChange={() => setSelected((s) => { const n = new Set(s); if (n.has(l.id)) n.delete(l.id); else n.add(l.id); return n; })} />}
                       </td>
                       <td className="px-3 py-3">
                         <p className="font-medium">{l.contact.name}</p>

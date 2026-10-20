@@ -39,4 +39,4 @@ export const POST = route(async (req) => {
     await ingestLeadAd({ externalId: "sim_l_" + id, formName: "Free Consultation", name, email: `${handle}@example.com`, phone: "+1 555 010 " + Math.floor(1000 + Math.random() * 9000), message: SAMPLES.leadad[n] });
 
   return json({ ok: true, type });
-});
+}, { admin: true });

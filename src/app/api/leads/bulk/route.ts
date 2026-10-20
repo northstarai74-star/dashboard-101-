@@ -39,4 +39,4 @@ export const POST = route(async (req, _ctx, user) => {
     })),
   });
   return json({ updated: ids.length });
-});
+}, { admin: true });

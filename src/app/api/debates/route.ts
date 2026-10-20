@@ -8,6 +8,7 @@ const Body = z.object({ question: z.string().trim().min(10, "Describe the issue 
 
 export const GET = route(async () =>
   json(await db.debateResult.findMany({ orderBy: { createdAt: "desc" }, take: 20 })),
+  { admin: true },
 );
 
 export const POST = route(async (req) => {
@@ -24,4 +25,4 @@ export const POST = route(async (req) => {
     },
   });
   return json(saved, 201);
-});
+}, { admin: true });

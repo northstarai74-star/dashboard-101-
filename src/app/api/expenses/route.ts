@@ -10,7 +10,7 @@ const ExpenseInput = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
-export const GET = route(async () => json(await db.expense.findMany({ orderBy: { date: "desc" }, take: 50 })));
+export const GET = route(async () => json(await db.expense.findMany({ orderBy: { date: "desc" }, take: 50 })), { admin: true });
 
 export const POST = route(async (req) => {
   const input = ExpenseInput.parse(await req.json());
@@ -18,4 +18,4 @@ export const POST = route(async (req) => {
     data: { ...input, date: input.date ? new Date(`${input.date}T00:00:00.000Z`) : new Date() },
   });
   return json(expense, 201);
-});
+}, { admin: true });

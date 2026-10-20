@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { conversationScope } from "@/lib/access";
 import { PageHeader } from "@/components/shell";
 import { InboxView } from "@/components/inbox-view";
 
@@ -6,7 +9,10 @@ export const dynamic = "force-dynamic";
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
   const { c } = await searchParams;
+  const me = await getCurrentUser();
+  if (!me) redirect("/login");
   const convos = await db.conversation.findMany({
+    where: conversationScope(me),
     orderBy: { lastMessageAt: "desc" },
     take: 100,
     include: {

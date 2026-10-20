@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { json, route } from "@/lib/api";
+import { conversationScope } from "@/lib/access";
 import { getSettings } from "@/lib/settings";
 import { suggestReply } from "@/lib/ai/classify";
 import { createLead } from "@/lib/ingest";
@@ -11,8 +12,8 @@ type Ctx = { params: Promise<{ id: string; action: string }> };
 
 export const POST = route<Ctx>(async (req, { params }, user) => {
   const { id, action } = await params;
-  const convo = await db.conversation.findUnique({
-    where: { id },
+  const convo = await db.conversation.findFirst({
+    where: { id, ...conversationScope(user) },
     include: { contact: true, messages: { orderBy: { sentAt: "asc" } } },
   });
   if (!convo) return json({ error: "Conversation not found" }, 404);
@@ -44,7 +45,10 @@ export const POST = route<Ctx>(async (req, { params }, user) => {
       const existing = await db.lead.findFirst({ where: { contactId: convo.contactId, stage: { notIn: ["WON", "LOST"] } } });
       if (existing) return json({ error: "This contact already has an open lead" }, 409);
       const text = convo.messages.filter((m) => m.direction === "IN").map((m) => m.text).join("\n") || convo.contact.name;
-      return json(await createLead({ contactId: convo.contactId, source: "META_DM", text }), 201);
+      const lead = await createLead({ contactId: convo.contactId, source: "META_DM", text });
+      // A lead a team member opens from their inbox starts in their own list.
+      if (user.role !== "ADMIN") return json(await db.lead.update({ where: { id: lead.id }, data: { assignedUserId: user.id, assignedAgent: "HUMAN" } }), 201);
+      return json(lead, 201);
     }
 
     default:

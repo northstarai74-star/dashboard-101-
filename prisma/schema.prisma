@@ -30,6 +30,7 @@ model User {
   activities Activity[]
   rules      AssignmentRule[]
   creatives  Creative[]
+  todos      Todo[]
 }
 
 model Contact {
@@ -260,15 +261,19 @@ model DebateResult {
   @@index([createdAt])
 }
 
+// A task for one person. userId null = an owner-level task from before accounts existed (admins only).
 model Todo {
   id        String    @id @default(cuid())
   title     String
   done      Boolean   @default(false)
   dueDate   DateTime?
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@index([done, createdAt])
+  @@index([userId])
 }
 
 // Higgsfield image generations. STATUS: queued | in_progress | completed | failed | nsfw

@@ -20,9 +20,12 @@ async function verifyWithEmail(email: string, password: string) {
   return user && ok ? user : null;
 }
 
-/** Email-less sign-in: the password alone identifies the account (admins are tried first). */
+/**
+ * Email-less sign-in is for the owner only: the password is matched against admin accounts.
+ * Team members always sign in with their email, so their passwords never have to be unique.
+ */
 async function verifyPasswordOnly(password: string) {
-  const users = await db.user.findMany({ orderBy: [{ role: "asc" }, { createdAt: "asc" }] });
+  const users = await db.user.findMany({ where: { role: "ADMIN" }, orderBy: { createdAt: "asc" } });
   let match: (typeof users)[number] | null = null;
   // Check every account (no early exit) so timing doesn't reveal which one matched
   for (const u of users) {
@@ -50,7 +53,7 @@ async function handle(req: Request) {
     (await signInWithEnvAdmin(email, password)) ??
     (email ? await verifyWithEmail(email, password) : await verifyPasswordOnly(password));
   if (!user) {
-    return NextResponse.json({ error: email ? "Incorrect email or password" : "Incorrect password" }, { status: 401 });
+    return NextResponse.json({ error: email ? "Incorrect email or password" : "Incorrect password. Team members: enter your email too." }, { status: 401 });
   }
 
   await resetRateLimit(ipKey);

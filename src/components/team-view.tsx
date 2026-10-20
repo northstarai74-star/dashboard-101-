@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Bot, Pencil } from "lucide-react";
 import { Avatar, Button, Card, CardHeader, Input, Label, Modal, Select, ServiceBadge } from "./ui";
@@ -88,6 +89,7 @@ export function TeamView({ members, rules, isAdmin, meId }: { members: Member[];
               <div className="h-1.5 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-accent" style={{ width: `${(m.openLeads / maxOpen) * 100}%` }} /></div>
             </div>
             <div className="mt-3 flex min-h-6 flex-wrap gap-1">{m.services.map((s) => <ServiceBadge key={s} service={s} />)}</div>
+            {isAdmin && <Link href={`/team/${m.id}`} className="mt-3 inline-block text-xs font-medium text-accent hover:underline">View {m.id === meId ? "my" : "their"} workspace →</Link>}
           </Card>
         ))}
       </div>

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { PageHeader } from "@/components/shell";
 import { Card } from "@/components/ui";
 import { DebateRoom, type DebateRow } from "@/components/debate-room";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ async function roomIsUp() {
 }
 
 export default async function CouncilRoomPage() {
+  await requireAdmin();
   const [up, debates] = await Promise.all([
     roomIsUp(),
     db.debateResult.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),

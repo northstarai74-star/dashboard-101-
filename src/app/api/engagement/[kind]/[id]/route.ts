@@ -51,4 +51,4 @@ export const POST = route<Ctx>(async (req, { params }) => {
   }
 
   return json({ error: "Unknown kind" }, 404);
-});
+}, { admin: true });

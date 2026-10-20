@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { contactScope, leadScope } from "@/lib/access";
 import { Avatar, Card, CardHeader, ScoreBadge, ServiceBadge, StageBadge } from "@/components/ui";
 import { ContactEditor } from "@/components/contact-editor";
 import { SOURCE_META } from "@/lib/constants";
@@ -11,10 +14,12 @@ export const dynamic = "force-dynamic";
 
 export default async function ContactPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const c = await db.contact.findUnique({
-    where: { id },
+  const me = await getCurrentUser();
+  if (!me) redirect("/login");
+  const c = await db.contact.findFirst({
+    where: { id, ...contactScope(me) },
     include: {
-      leads: { orderBy: { createdAt: "desc" }, include: { deals: true, assignedUser: { select: { name: true } } } },
+      leads: { where: leadScope(me), orderBy: { createdAt: "desc" }, include: { deals: true, assignedUser: { select: { name: true } } } },
       conversations: { include: { messages: { orderBy: { sentAt: "desc" }, take: 1 } } },
     },
   });

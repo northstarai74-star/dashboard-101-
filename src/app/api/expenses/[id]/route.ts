@@ -7,4 +7,4 @@ export const DELETE = route<Ctx>(async (_req, { params }) => {
   const { id } = await params;
   await db.expense.delete({ where: { id } }).catch(() => null);
   return json({ ok: true });
-});
+}, { admin: true });

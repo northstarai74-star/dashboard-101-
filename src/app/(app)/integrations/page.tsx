@@ -4,10 +4,12 @@ import { getSettings } from "@/lib/settings";
 import { getConnection } from "@/lib/meta";
 import { PageHeader } from "@/components/shell";
 import { IntegrationsView } from "@/components/integrations-view";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
 export default async function IntegrationsPage() {
+  await requireAdmin();
   const me = await getCurrentUser();
   const [keys, conn, settings] = await Promise.all([
     db.apiKey.findMany({

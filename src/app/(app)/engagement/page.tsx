@@ -1,10 +1,12 @@
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/shell";
 import { EngagementView } from "@/components/engagement-view";
+import { requireAdmin } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
 export default async function EngagementPage() {
+  await requireAdmin();
   const [comments, enquiries] = await Promise.all([
     db.comment.findMany({ orderBy: [{ handled: "asc" }, { createdAt: "desc" }], take: 100 }),
     db.enquiry.findMany({ orderBy: [{ handled: "asc" }, { createdAt: "desc" }], take: 100 }),
