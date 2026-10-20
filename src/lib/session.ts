@@ -1,4 +1,5 @@
 import { SignJWT } from "jose";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "./db";
 import { SESSION_COOKIE, loginDisabled, readSession, type SessionPayload } from "./token";
@@ -33,7 +34,8 @@ export async function destroySession() {
 }
 
 /** Current user from the session cookie (server components / route handlers). */
-export async function getCurrentUser() {
+// cache() dedupes the lookup across the layout, the page and any server component in one request.
+export const getCurrentUser = cache(async () => {
   if (loginDisabled()) {
     return db.user.findFirst({
       where: { role: "ADMIN" },
@@ -48,4 +50,4 @@ export async function getCurrentUser() {
     where: { id: session.uid },
     select: { id: true, name: true, email: true, role: true, title: true, avatarColor: true },
   });
-}
+});

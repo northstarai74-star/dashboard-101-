@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "./db";
 
 export type AppSettings = {
@@ -14,7 +15,8 @@ const DEFAULTS: AppSettings = {
   claudeModel: "claude-sonnet-5-5",
 };
 
-export async function getSettings(): Promise<AppSettings> {
+// cache() dedupes the layout's and each page's call within one request, so settings are read once per render.
+export const getSettings = cache(async (): Promise<AppSettings> => {
   const rows = await db.setting.findMany();
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   return {
@@ -23,7 +25,7 @@ export async function getSettings(): Promise<AppSettings> {
     aiAgent: map.aiAgent !== undefined ? map.aiAgent === "true" : DEFAULTS.aiAgent,
     claudeModel: map.claudeModel ?? DEFAULTS.claudeModel,
   };
-}
+});
 
 export async function saveSettings(patch: Partial<AppSettings>) {
   await Promise.all(
