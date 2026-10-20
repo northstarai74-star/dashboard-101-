@@ -11,7 +11,7 @@ export default async function StudioPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   const [creatives, settings, keys] = await Promise.all([
-    db.creative.findMany({ where: me.role === "ADMIN" ? {} : { userId: me.id }, orderBy: { createdAt: "desc" }, take: 60, include: { user: { select: { name: true } } } }),
+    db.creative.findMany({ relationLoadStrategy: "join", where: me.role === "ADMIN" ? {} : { userId: me.id }, orderBy: { createdAt: "desc" }, take: 60, include: { user: { select: { name: true } } } }),
     getSettings(),
     db.apiKey.count({ where: { provider: "HIGGSFIELD", status: "ACTIVE" } }),
   ]);

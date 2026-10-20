@@ -20,7 +20,6 @@ import {
   Sparkles,
   Wand2,
   ChartColumn,
-  Link2,
   Megaphone,
   Target,
   Bot,
@@ -55,7 +54,6 @@ const ADMIN_NAV: NavGroup[] = [
     { href: "/studio", label: "Creative Studio", icon: Wand2 },
   ]},
   { group: "System", items: [
-    { href: "/connections", label: "Connections", icon: Link2 },
     { href: "/integrations", label: "Integrations", icon: PlugZap },
     { href: "/settings", label: "Settings", icon: Settings },
   ]},

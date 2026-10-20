@@ -6,6 +6,9 @@ import { withKey, ProviderError } from "./keys";
 export const GRAPH = "https://graph.facebook.com/v23.0";
 
 export async function getConnection() {
+  // A plain read in the common case. The upsert it replaced ran as a multi-statement transaction on every call.
+  const existing = await db.metaConnection.findUnique({ where: { id: "singleton" } });
+  if (existing) return existing;
   return db.metaConnection.upsert({
     where: { id: "singleton" },
     create: { id: "singleton", verifyToken: "bos_" + randomBytes(12).toString("hex") },

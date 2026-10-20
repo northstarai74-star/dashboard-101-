@@ -12,6 +12,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   const me = await getCurrentUser();
   if (!me) redirect("/login");
   const convos = await db.conversation.findMany({
+    relationLoadStrategy: "join",
     where: conversationScope(me),
     orderBy: { lastMessageAt: "desc" },
     take: 100,
@@ -23,7 +24,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Inbox" subtitle="Every conversation from Instagram, WhatsApp and LinkedIn in one place" />
+      <PageHeader title="Inbox" subtitle="Every conversation from Instagram, WhatsApp, Telegram and LinkedIn in one place" />
       <InboxView
         initialId={c ?? convos[0]?.id ?? null}
         convos={convos.map((v) => ({

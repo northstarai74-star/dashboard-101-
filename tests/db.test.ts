@@ -154,3 +154,24 @@ test("team access code is stored hashed, verifies, and can be removed", { skip }
   await clearSignupCode();
   assert.equal(await verifySignupCode(code), false);
 });
+
+test("channel tests reject malformed credentials before calling the provider", { skip }, async (t) => {
+  const { db } = await import("../src/lib/db");
+  const { saveChannel, testChannel, disconnectChannel } = await import("../src/lib/connections");
+  const existing = await db.connection.findMany({ where: { id: { in: ["MAILCHIMP", "META_ADS"] } } });
+  t.after(async () => {
+    await disconnectChannel("MAILCHIMP");
+    await disconnectChannel("META_ADS");
+    for (const row of existing) await db.connection.create({ data: row });
+  });
+
+  await saveChannel("MAILCHIMP", { apiKey: "nodashinthiskey" });
+  const mc = await testChannel("MAILCHIMP");
+  assert.equal(mc.ok, false);
+  assert.match(mc.detail, /data centre/);
+
+  await saveChannel("META_ADS", { adAccountId: "not-a-number", accessToken: "x" });
+  const ads = await testChannel("META_ADS");
+  assert.equal(ads.ok, false);
+  assert.match(ads.detail, /numbers only/);
+});

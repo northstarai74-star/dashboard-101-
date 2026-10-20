@@ -12,6 +12,7 @@ export default async function TodosPage() {
   const admin = me.role === "ADMIN";
   const [todos, people] = await Promise.all([
     db.todo.findMany({
+      relationLoadStrategy: "join",
       where: admin ? {} : { userId: me.id },
       orderBy: [{ done: "asc" }, { createdAt: "desc" }],
       take: 200,

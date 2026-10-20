@@ -14,6 +14,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const admin = me.role === "ADMIN";
   const [leads, users] = await Promise.all([
     db.lead.findMany({
+      relationLoadStrategy: "join",
       where: leadScope(me),
       orderBy: { createdAt: "desc" },
       take: 1000,

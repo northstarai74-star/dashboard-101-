@@ -46,6 +46,9 @@ export const SOURCE_META: Record<string, string> = {
   META_DM: "Instagram DM",
   META_COMMENT: "Instagram comment",
   META_LEAD_AD: "Meta lead ad",
+  WHATSAPP_DM: "WhatsApp",
+  TELEGRAM_DM: "Telegram",
+  LINKEDIN_DM: "LinkedIn",
   MANUAL: "Manual",
 };
 

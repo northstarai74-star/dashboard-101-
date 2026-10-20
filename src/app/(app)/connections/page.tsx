@@ -1,18 +1,6 @@
-import { getCurrentUser } from "@/lib/session";
-import { listChannels } from "@/lib/connections";
-import { PageHeader } from "@/components/shell";
-import { ConnectionsView } from "@/components/connections-view";
-import { requireAdmin } from "@/lib/access";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function ConnectionsPage() {
-  await requireAdmin();
-  const [me, channels] = await Promise.all([getCurrentUser(), listChannels()]);
-  return (
-    <>
-      <PageHeader title="Connections" subtitle="Link your channels and finance accounts. Each one is checked against its provider's API." />
-      <ConnectionsView channels={channels} isAdmin={me?.role === "ADMIN"} />
-    </>
-  );
+// Connections moved into Integrations so every tool is set up in one place.
+export default function ConnectionsPage() {
+  redirect("/integrations");
 }

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Check, Plug, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowUpRight, Check, Copy, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { Button, Card, Input, Label, Modal } from "./ui";
 import { cn, timeAgo } from "@/lib/utils";
 import { GROUPS, type GroupId } from "@/lib/connections-groups";
@@ -22,7 +22,24 @@ const STATUS = {
   NOT_CONNECTED: { label: "Not connected", cls: "bg-slate-500/10 text-slate-500" },
 } as const;
 
-export function ConnectionsView({ channels, isAdmin }: { channels: ChannelState[]; isAdmin: boolean }) {
+function WebhookUrl({ url }: { url: string }) {
+  const [done, setDone] = React.useState(false);
+  return (
+    <div className="mt-2 flex items-center gap-1.5">
+      <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2 px-2 py-1 text-[11px]" title={url}>{url}</code>
+      <button
+        type="button"
+        aria-label="Copy webhook URL"
+        className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
+        onClick={() => { navigator.clipboard?.writeText(url); setDone(true); setTimeout(() => setDone(false), 1500); }}
+      >
+        {done ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+    </div>
+  );
+}
+
+export function ConnectionsView({ channels, isAdmin, appUrl }: { channels: ChannelState[]; isAdmin: boolean; appUrl: string }) {
   const router = useRouter();
   const [editing, setEditing] = React.useState<ChannelState | null>(null);
   const [values, setValues] = React.useState<Record<string, string>>({});
@@ -93,8 +110,8 @@ export function ConnectionsView({ channels, isAdmin }: { channels: ChannelState[
       {!isAdmin && <p className="rounded-xl border bg-surface-2 px-4 py-3 text-sm text-muted">Only admins can change connections. You can view their status here.</p>}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       <aside className="lg:sticky lg:top-6 lg:w-56 lg:shrink-0">
-        <nav aria-label="Connection groups" className="rounded-xl border bg-surface-2 p-2">
-          <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide text-muted">Groups</p>
+        <nav aria-label="Tool groups" className="rounded-xl border bg-surface-2 p-2">
+          <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide text-muted">Channels &amp; tools</p>
           <ul role="tablist" aria-orientation="vertical" className="flex flex-row gap-1 overflow-x-auto lg:flex-col">
             {[{ id: "ALL" as const, label: "All" }, ...GROUPS].map((g) => {
               const count = g.id === "ALL" ? channels.length : channels.filter((c) => c.group === g.id).length;
@@ -121,7 +138,7 @@ export function ConnectionsView({ channels, isAdmin }: { channels: ChannelState[
         </nav>
       </aside>
 
-      <div role="tabpanel" className="grid min-w-0 flex-1 gap-4 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+      <div role="tabpanel" className="grid min-w-0 flex-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
         {visible.map((c) => {
           const st = STATUS[c.status];
           const configured = c.fields.length > 0 && c.fields.some((f) => (f.secret ? c.hasSecret[f.key] : !!c.config[f.key]));
@@ -132,8 +149,8 @@ export function ConnectionsView({ channels, isAdmin }: { channels: ChannelState[
                   <Plug size={18} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="truncate font-semibold">{c.name}</h3>
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                    <h3 className="font-semibold">{c.name}</h3>
                     <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold", st.cls)}>{st.label}</span>
                   </div>
                   <p className="mt-1 text-xs text-muted">{c.blurb}</p>
@@ -144,12 +161,18 @@ export function ConnectionsView({ channels, isAdmin }: { channels: ChannelState[
                 {c.accountLabel && <p className="truncate font-medium text-fg">{c.accountLabel}</p>}
                 {c.lastCheckedAt && <p className="text-muted">Last checked {timeAgo(c.lastCheckedAt)}</p>}
                 {c.lastError && <p className="truncate text-rose-600" title={c.lastError}>{c.lastError}</p>}
+                {c.webhookPath && (
+                  <div className="pt-1">
+                    <p className="text-muted">Point the provider&apos;s webhook / automation at:</p>
+                    <WebhookUrl url={`${appUrl}${c.webhookPath}`} />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 border-t px-5 py-3">
                 {c.managedBy === "meta" ? (
-                  <Link href="/integrations" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
-                    Set up on Integrations <ArrowUpRight size={14} />
+                  <Link href="/integrations?tab=meta" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+                    Set up under Meta &amp; AI keys <ArrowUpRight size={14} />
                   </Link>
                 ) : (
                   <>

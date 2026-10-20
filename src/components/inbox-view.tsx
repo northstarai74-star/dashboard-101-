@@ -11,6 +11,7 @@ const CHANNELS = [
   { id: "ALL", label: "All" },
   { id: "INSTAGRAM", label: "Instagram", cls: "bg-pink-500/10 text-pink-600" },
   { id: "WHATSAPP", label: "WhatsApp", cls: "bg-emerald-500/10 text-emerald-600" },
+  { id: "TELEGRAM", label: "Telegram", cls: "bg-sky-400/10 text-sky-500" },
   { id: "LINKEDIN", label: "LinkedIn", cls: "bg-sky-500/10 text-sky-600" },
 ];
 const chip = (platform: string) => CHANNELS.find((c) => c.id === platform)?.cls ?? "bg-slate-500/10 text-slate-600";
@@ -42,7 +43,7 @@ export function InboxView({ convos, initialId }: { convos: Convo[]; initialId: s
   const visible = channel === "ALL" ? convos : convos.filter((c) => c.platform === channel);
   const endRef = React.useRef<HTMLDivElement>(null);
   const active = convos.find((c) => c.id === activeId) ?? null;
-  const canReply = active?.platform === "INSTAGRAM";
+  const canReply = !!active && ["INSTAGRAM", "WHATSAPP", "TELEGRAM"].includes(active.platform);
 
   React.useEffect(() => {
     if (active && active.unread > 0) post(`/api/conversations/${active.id}/read`).then(() => router.refresh()).catch(() => {});

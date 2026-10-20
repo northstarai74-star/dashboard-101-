@@ -4,7 +4,8 @@
 export const GROUPS = [
   { id: "MESSAGING", label: "Messaging" },
   { id: "SOCIAL", label: "Social" },
-  { id: "EMAIL_WEB", label: "Email & web" },
+  { id: "MARKETING", label: "Marketing & ads" },
+  { id: "EMAIL_WEB", label: "Website" },
   { id: "FINANCE", label: "Finance" },
 ] as const;
 export type GroupId = (typeof GROUPS)[number]["id"];

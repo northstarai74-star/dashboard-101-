@@ -1,6 +1,10 @@
 import { db } from "./db";
 import { getSettings } from "./settings";
 import { sendInstagramMessage } from "./meta";
+import { sendTelegram, sendWhatsApp } from "./messaging";
+
+/** Platforms a reply can be sent on from the Inbox. */
+export const REPLY_PLATFORMS = ["INSTAGRAM", "WHATSAPP", "TELEGRAM"];
 
 const isDuplicate = (err: unknown) => (err as { code?: string })?.code === "P2002";
 
@@ -22,16 +26,26 @@ export async function recordOutgoing(conversationId: string, text: string, opts:
   return msg;
 }
 
-/** Sends a DM through Meta (skipped in demo mode, where it is only recorded) and stores it. */
+/** Sends a reply on the conversation's platform (skipped in demo mode, where it is only recorded) and stores it. */
 export async function sendDirectMessage(conversationId: string, text: string, opts: { byAi?: boolean } = {}) {
   const convo = await db.conversation.findUnique({ where: { id: conversationId }, include: { contact: true } });
   if (!convo) throw new Error("Conversation not found");
-  if (convo.platform !== "INSTAGRAM") throw new Error(`Replies to ${convo.platform.toLowerCase()} inquiries aren't sent from here yet`);
+  if (!REPLY_PLATFORMS.includes(convo.platform)) throw new Error(`Replies to ${convo.platform.toLowerCase()} inquiries aren't sent from here yet`);
   const settings = await getSettings();
   let externalId: string | undefined;
   if (!settings.demoMode) {
-    if (!convo.contact.igUserId) throw new Error("This contact has no Instagram ID to message");
-    externalId = (await sendInstagramMessage(convo.contact.igUserId, text)).message_id;
+    const { platform, contact } = convo;
+    if (platform === "INSTAGRAM") {
+      if (!contact.igUserId) throw new Error("This contact has no Instagram ID to message");
+      externalId = (await sendInstagramMessage(contact.igUserId, text)).message_id;
+    } else if (platform === "WHATSAPP") {
+      if (!contact.phone) throw new Error("This contact has no phone number to message");
+      externalId = await sendWhatsApp(contact.phone, text);
+    } else {
+      const chatId = contact.igUserId?.replace(/^telegram:/, "");
+      if (!chatId) throw new Error("This contact has no Telegram chat to message");
+      externalId = await sendTelegram(chatId, text);
+    }
   }
   return recordOutgoing(conversationId, text, { externalId, byAi: opts.byAi });
 }

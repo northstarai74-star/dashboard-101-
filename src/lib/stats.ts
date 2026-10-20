@@ -14,11 +14,12 @@ export async function dashboardStats(rangeDays: number) {
     db.deal.findMany({ where: { paidAt: { gte: since }, status: "PAID" } }),
     db.deal.findMany({ where: { paidAt: { gte: prevSince, lt: since }, status: "PAID" } }),
     db.lead.findMany({
+      relationLoadStrategy: "join",
       orderBy: { createdAt: "desc" },
       take: 7,
       include: { contact: true, assignedUser: { select: { name: true, avatarColor: true } } },
     }),
-    db.activity.findMany({ orderBy: { createdAt: "desc" }, take: 8, include: { lead: { include: { contact: true } } } }),
+    db.activity.findMany({ relationLoadStrategy: "join", orderBy: { createdAt: "desc" }, take: 8, include: { lead: { include: { contact: true } } } }),
   ]);
 
   const revenue = deals.reduce((s, d) => s + d.amount, 0);

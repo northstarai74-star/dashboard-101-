@@ -11,6 +11,7 @@ export default async function TeamPage() {
   const me = await getCurrentUser();
   const [users, rules] = await Promise.all([
     db.user.findMany({
+      relationLoadStrategy: "join",
       orderBy: { createdAt: "asc" },
       include: { leads: { select: { stage: true, service: true, deals: { select: { amount: true } } } } },
     }),

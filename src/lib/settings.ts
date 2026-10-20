@@ -16,8 +16,7 @@ const DEFAULTS: AppSettings = {
 };
 
 // cache() dedupes the layout's and each page's call within one request, so settings are read once per render.
-export const getSettings = cache(async (): Promise<AppSettings> => {
-  const rows = await db.setting.findMany();
+export function parseSettings(rows: { key: string; value: string }[]): AppSettings {
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   return {
     demoMode: map.demoMode !== undefined ? map.demoMode === "true" : DEFAULTS.demoMode,
@@ -25,7 +24,9 @@ export const getSettings = cache(async (): Promise<AppSettings> => {
     aiAgent: map.aiAgent !== undefined ? map.aiAgent === "true" : DEFAULTS.aiAgent,
     claudeModel: map.claudeModel ?? DEFAULTS.claudeModel,
   };
-});
+}
+
+export const getSettings = cache(async (): Promise<AppSettings> => parseSettings(await db.setting.findMany()));
 
 export async function saveSettings(patch: Partial<AppSettings>) {
   await Promise.all(

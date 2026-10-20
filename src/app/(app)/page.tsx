@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { memberWorkspace } from "@/lib/member";
+import { getShellData } from "@/lib/shell-data";
 import { MemberWorkspace } from "@/components/member-workspace";
 import { dashboardStats } from "@/lib/stats";
 import { listChannels } from "@/lib/connections";
@@ -48,7 +49,7 @@ function Headline({ label, value, delta, icon: Icon, tone }: { label: string; va
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const me = await getCurrentUser();
   if (!me) redirect("/login");
-  if (me.role === "ADMIN") return <AdminDashboard searchParams={searchParams} />;
+  if (me.role === "ADMIN") return <AdminDashboard searchParams={searchParams} userId={me.id} />;
 
   const w = await memberWorkspace(me.id);
   return (
@@ -59,16 +60,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   );
 }
 
-async function AdminDashboard({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+async function AdminDashboard({ searchParams, userId }: { searchParams: Promise<{ range?: string }>; userId: string }) {
   const { range } = await searchParams;
   const rangeDays = [7, 30, 90].includes(Number(range)) ? Number(range) : 30;
 
   const [s, unread, unassigned, channels, users] = await Promise.all([
     dashboardStats(rangeDays),
-    db.conversation.aggregate({ _sum: { unread: true } }),
+    getShellData(userId, true),
     db.lead.count({ where: { assignedUserId: null, stage: { notIn: ["WON", "LOST"] } } }),
     listChannels(),
     db.user.findMany({
+      relationLoadStrategy: "join",
       orderBy: { createdAt: "asc" },
       include: { leads: { select: { stage: true, deals: { select: { amount: true } } } } },
     }),
@@ -88,7 +90,7 @@ async function AdminDashboard({ searchParams }: { searchParams: Promise<{ range?
   });
   const maxOpen = Math.max(1, ...team.map((m) => m.openLeads));
   const totalLeads = s.byService.reduce((n, b) => n + b.leads, 0);
-  const unreadCount = unread._sum.unread ?? 0;
+  const unreadCount = unread.unread;
   const connected = channels.filter((c) => c.status === "CONNECTED").length;
   const failing = channels.filter((c) => c.status === "ERROR");
 
@@ -148,7 +150,7 @@ async function AdminDashboard({ searchParams }: { searchParams: Promise<{ range?
               </Link>
             </li>
             <li>
-              <Link href="/connections" className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2">
+              <Link href="/integrations" className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Link2 size={16} /></span>
                 <span className="flex-1 text-sm">Channels connected</span>
                 <span className="text-sm font-semibold tabular-nums">{connected}<span className="font-normal text-muted"> / {channels.length}</span></span>
@@ -157,7 +159,7 @@ async function AdminDashboard({ searchParams }: { searchParams: Promise<{ range?
           </ul>
           {failing.length > 0 && (
             <p className="mx-5 mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
-              Check failed for {failing.map((c) => c.name).join(", ")}. <Link href="/connections" className="font-medium underline">Fix on Connections</Link>
+              Check failed for {failing.map((c) => c.name).join(", ")}. <Link href="/integrations" className="font-medium underline">Fix on Integrations</Link>
             </p>
           )}
         </Card>

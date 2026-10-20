@@ -32,7 +32,7 @@ Login: the owner signs in with `ADMIN_PASSWORD` from `.env` (defaults in `.env.e
 | Team | Members (add, edit, reset password, remove), workload, auto-assignment rules per service (AI agent or person) |
 | Analytics | Every channel in one place (Instagram, WhatsApp, YouTube, LinkedIn, creation tools, email, website & forms) plus revenue, expenses and profit. Log daily numbers by hand, and ask **The Council** for advice |
 | Creative Studio | Generate post / reel / ad images with Higgsfield |
-| Integrations | Meta connection + webhook details, **multi-key vault** for Meta / Claude / Higgsfield |
+| Integrations | **Channels & tools** tab: WhatsApp, Telegram, Instagram, LinkedIn, YouTube, Brevo, Mailchimp, HubSpot, Meta Ads, website, Stripe (each saves encrypted credentials and runs a live check). **Meta & AI keys** tab: Meta connection + webhook details, **multi-key vault** for Meta / Claude / Higgsfield |
 | Settings | Demo mode, auto-assign, AI agent auto-replies, Claude model, change your password |
 
 ## Analytics, The Council and the assistant
@@ -54,6 +54,20 @@ Expenses are logged on the same page; profit = paid deals − expenses.
 
 **The Council** gives advice from five advisors (Strategist, Growth Marketer, CFO, Operator, Devil's Advocate) over the last 30 days of numbers, plus a verdict and 3–5 actions. Use it from the Analytics page, or type `ask the council <question>` in the assistant chat (bottom-right button on every page).
 With a Claude key and demo mode off it runs one live Claude call; otherwise it gives rule-based advice from the same numbers.
+
+## Channels and marketing tools
+
+Everything is connected on **Integrations → Channels & tools** (the old Connections page redirects there). Saving a card stores its credentials encrypted and calls the provider to check them; cards for inbound channels show the webhook URL to paste into the provider (built from `APP_URL`).
+
+- **WhatsApp** (Cloud API): receive via `/api/whatsapp/webhook`, reply from the Inbox (free-form replies only work inside WhatsApp's 24-hour window; the provider's error is shown otherwise).
+- **Telegram**: create a bot with @BotFather, paste the token and any webhook secret. With a public https `APP_URL` the webhook is registered for you; messages land in the Inbox and replies are sent from there.
+- **LinkedIn / website forms / automations**: POST inquiries to `/api/inquiries/ingest` with the channel's ingest token.
+- **Marketing**: Brevo, Mailchimp, HubSpot and Meta Ads (ad account + `ads_read` token). Their status shows on the Marketing page.
+- In demo mode replies are recorded but never sent, as with Instagram.
+
+## Performance
+
+Each page makes a handful of database round trips; on a remote database (Supabase) every one costs a network hop. The layout's unread/comment/settings reads are one query, relation reads use Prisma's `relationJoins`, and `getConnection()` no longer writes on every call. On Vercel keep the function region next to the database, and if you use the Supabase **transaction pooler** (port 6543, `?pgbouncer=true`) set `DB_CONNECTION_LIMIT=5` so a page's queries run in parallel instead of one after another (the default of 1 is for the session pooler).
 
 ## AI agent
 

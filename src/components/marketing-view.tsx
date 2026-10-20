@@ -12,6 +12,9 @@ const SOURCE_COLORS: Record<string, string> = {
   META_DM: "#8b5cf6",
   META_COMMENT: "#3b82f6",
   META_LEAD_AD: "#10b981",
+  WHATSAPP_DM: "#22c55e",
+  TELEGRAM_DM: "#0ea5e9",
+  LINKEDIN_DM: "#0369a1",
   MANUAL: "#94a3b8",
   other: "#f59e0b",
 };

@@ -12,6 +12,7 @@ export default async function ContactsPage() {
   if (!me) redirect("/login");
   const admin = me.role === "ADMIN";
   const contacts = await db.contact.findMany({
+    relationLoadStrategy: "join",
     where: contactScope(me),
     orderBy: { createdAt: "desc" },
     take: 1000,

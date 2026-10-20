@@ -8,11 +8,11 @@ const isDuplicate = (err: unknown) => (err as { code?: string })?.code === "P200
 type ContactInput = { igUserId?: string; name?: string; handle?: string; email?: string; phone?: string };
 
 /** Channels that can hold a conversation. Instagram is the default for the Meta webhook. */
-export const PLATFORMS = ["INSTAGRAM", "WHATSAPP", "LINKEDIN"] as const;
+export const PLATFORMS = ["INSTAGRAM", "WHATSAPP", "TELEGRAM", "LINKEDIN"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
 /** Lead source recorded for a DM on each platform (INSTAGRAM keeps the original META_DM value). */
-const dmSource = (platform: string) => (platform === "INSTAGRAM" ? "META_DM" : `${platform}_DM`);
+export const dmSource = (platform: string) => (platform === "INSTAGRAM" ? "META_DM" : `${platform}_DM`);
 
 export async function upsertContact(input: ContactInput, source: string) {
   if (input.igUserId) {
